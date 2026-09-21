@@ -1,0 +1,2 @@
+const modules=[1,2,3,4];
+export default function EventosSuscriptos(){return <div className="screen subscribed"><div className="module-grid">{modules.map((m)=><section className="module-card" key={m}><h3>Nombre de módulo {m}</h3>{Array.from({length:5},(_,i)=><label key={i}><input type="checkbox" defaultChecked={(i+m)%3===0}/><span>Nombre de evento</span></label>)}</section>)}</div><button className="primary apply">Aplicar</button></div>}
