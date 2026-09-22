@@ -1,13 +1,53 @@
 import { useState } from "react";
-import JsonModal from "../components/JsonModal";
-
-const events=['PaymentRequested','OrderBilled','InvoiceGenerated','AuthorizationRevoked','LedgerEntryRecorded'];
-
-function Module({title,sub,onJson}){
-  return <section className="subscription-module"><header><div><h2>{title}</h2><code>{sub}</code></div><div><span className="badge">Tópico: events.core.v1</span> <span className="badge">Particiones: 0-15</span></div></header><table><thead><tr><th>Nº DE EVENTO</th><th>NOMBRE DEL EVENTO</th><th>FECHA ENTRADA/EMISIÓN</th><th>TIPO DE EVENTO</th><th>ESTADO</th><th>DESCRIPCIÓN DE PROCESAMIENTO</th><th>ACCIONES</th></tr></thead><tbody>{events.map((e,i)=>{const event={id:`#EVT-${904128-i}`,nombre:e,fecha:`2025-05-14 10:2${i}:02 UTC`,tipo:"Domain.Fact",estado:i===3?"Error":"Éxito",descripcion:"Transacción procesada correctamente por el servicio...",modulo:title,topic:"events.core.v1"};return <tr key={e}><td>{event.id}</td><td><b>{e}</b></td><td>{event.fecha}</td><td>{event.tipo}</td><td><span className={i===3?'status error':'status'}>● {event.estado}</span></td><td>{event.descripcion}</td><td><button className="json-btn" onClick={()=>onJson(event)}>{"{}"} JSON</button> <button className="round-btn">↻</button></td></tr>})}</tbody></table><div className="pager">Mostrando 1-5 de 58 eventos　　　　　　　　　‹　1　2　3　4　5　6　7　›</div></section>
-}
+import {
+  getSubscriptionPreferences,
+  moduleCatalog,
+  saveSelectedModules,
+} from "../services/subscriptionPreferences";
 
 export default function Suscripciones(){
-  const [json,setJson]=useState(null);
-  return <div className="screen subscriptions"><div className="crumb">Observatory / Control Plane / Gestión de Subscripciones</div><header className="page-head"><div><h1>Página de Subscripciones del Core</h1><code>cluster-prod-aws-east1</code><p>Monitoreo, control de tópicos y balance de carga de eventos por módulo suscriptor conectado al bus Kafka/RabbitMQ.</p></div><div><button>↻ Sincronizar Cluster</button> <button>☷ Configuración Avanzada</button><br/><button className="primary">⊕ Nueva Suscripción</button></div></header><div className="stats"><div><small>MÓDULOS ACTIVOS</small><strong>6 de 6 conectados</strong></div><div><small>SUSCRIPCIONES TOTALES</small><strong>24 tópicos</strong></div><div><small>THROUGHPUT INGESTION</small><strong>3,480 evt/s</strong></div><div><small>MODO DE DESPACHO</small><strong>Event-Driven Pub/Sub</strong></div></div><Module title="Módulo con Eventos Suscriptos: Servicio de Pagos" sub="svc.core.payments — Salida & Entrada" onJson={setJson}/><Module title="Módulo con Eventos Suscriptos: Gestión de Pedidos" sub="svc.core.orders — Consumidor Inbound" onJson={setJson}/><JsonModal data={json} onClose={()=>setJson(null)}/></div>
+  const initial=getSubscriptionPreferences();
+  const [selected,setSelected]=useState(initial.moduleIds);
+  const [saved,setSaved]=useState(false);
+
+  const toggle=(moduleId)=>{
+    setSaved(false);
+    setSelected((current)=>current.includes(moduleId)
+      ? current.filter((id)=>id!==moduleId)
+      : [...current,moduleId]);
+  };
+
+  const apply=()=>{
+    const next=saveSelectedModules(selected);
+    setSelected(next.moduleIds);
+    setSaved(true);
+  };
+
+  return <div className="screen subscriptions">
+    <div className="crumb">Observatory / Suscripciones / Selección de módulos</div>
+    <header className="page-head">
+      <div>
+        <h1>Suscripciones</h1>
+        <p>Seleccioná los módulos que querés observar. En Eventos Suscriptos vas a elegir qué eventos seguir dentro de estos módulos.</p>
+      </div>
+      <span className="badge">{selected.length} de {moduleCatalog.length} módulos seleccionados</span>
+    </header>
+
+    <div className="subscription-selector-grid">
+      {moduleCatalog.map((module)=><label className={`module-choice ${selected.includes(module.id)?"selected":""}`} key={module.id}>
+        <input type="checkbox" checked={selected.includes(module.id)} onChange={()=>toggle(module.id)}/>
+        <span>
+          <strong>{module.name}</strong>
+          <code>{module.code}</code>
+          <small>{module.events.length} tipos de evento disponibles</small>
+        </span>
+      </label>)}
+    </div>
+
+    <div className="selection-actions">
+      <span className="selection-summary">Los eventos de un módulo deseleccionado también dejan de formar parte de la suscripción.</span>
+      <button className="primary" type="button" onClick={apply}>Aplicar módulos</button>
+    </div>
+    {saved&&<p className="selection-status success" role="status">Selección de módulos guardada. Continuá en Eventos Suscriptos para elegir los eventos.</p>}
+  </div>;
 }
