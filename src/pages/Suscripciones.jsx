@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router";
 import {
   getSubscriptionPreferences,
   moduleCatalog,
@@ -34,14 +35,17 @@ export default function Suscripciones(){
     </header>
 
     <div className="subscription-selector-grid">
-      {moduleCatalog.map((module)=><label className={`module-choice ${selected.includes(module.id)?"selected":""}`} key={module.id}>
-        <input type="checkbox" checked={selected.includes(module.id)} onChange={()=>toggle(module.id)}/>
-        <span>
-          <strong>{module.name}</strong>
-          <code>{module.code}</code>
-          <small>{module.events.length} tipos de evento disponibles</small>
-        </span>
-      </label>)}
+      {moduleCatalog.map((module)=><article className={`module-choice ${selected.includes(module.id)?"selected":""}`} key={module.id}>
+        <label className="module-choice-main">
+          <input type="checkbox" checked={selected.includes(module.id)} onChange={()=>toggle(module.id)}/>
+          <span>
+            <strong>{module.name}</strong>
+            <code>{module.code}</code>
+            <small>{module.events.length} tipos de evento disponibles</small>
+          </span>
+        </label>
+        <Link className="module-metrics-link" to={`/metrics?module=${encodeURIComponent(module.id)}`}>Ver métricas →</Link>
+      </article>)}
     </div>
 
     <div className="selection-actions">
