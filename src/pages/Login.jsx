@@ -22,6 +22,12 @@ function PasswordStrength({ value }) {
   </div>;
 }
 
+function Status({ status }) {
+  return status.message
+    ? <p className={`auth-status ${status.type}`} role="status">{status.message}</p>
+    : null;
+}
+
 export default function Login({ onLogin }) {
   const params=new URLSearchParams(window.location.search);
   const resetToken=params.get("token");
@@ -66,20 +72,19 @@ export default function Login({ onLogin }) {
     if(result){setContrasena("");setConfirmar("");setView("login");}
   };
 
-  const Status=()=>status.message?<p className={`auth-status ${status.type}`} role="status">{status.message}</p>:null;
 
   return <div className="login-screen">
     <div className="login-preview-nav"><span>1. Historial de eventos</span><span>2. Eventos Suscriptos</span><span>3. Métricas</span><span>4. Suscripciones</span><span>●</span></div>
     <div className="login-overlay">
       {view==="login"&&<form className="login-card auth-card-wide" onSubmit={submitLogin}>
-        <div className="login-avatar"><i/><b/></div><h2>Iniciar sesión</h2><Status/>
+        <div className="login-avatar"><i/><b/></div><h2>Iniciar sesión</h2><Status status={status}/>
         <input value={usuario} onChange={e=>setUsuario(e.target.value)} placeholder="Usuario" autoComplete="username" aria-label="Usuario"/>
         <input type="password" value={contrasena} onChange={e=>setContrasena(e.target.value)} placeholder="Contraseña" autoComplete="current-password" aria-label="Contraseña"/>
         <button className="login-submit" disabled={loading}>{loading?"Ingresando...":"Iniciar Sesión"}</button>
         <div className="auth-links"><button type="button" onClick={()=>go("forgot")}>¿Olvidaste tu contraseña?</button><span>¿No tenés cuenta? <button type="button" onClick={()=>go("register")}>Registrarse</button></span></div>
       </form>}
       {view==="register"&&<form className="login-card auth-card-wide" onSubmit={submitRegister}>
-        <button className="login-close" type="button" onClick={()=>go("login")}>×</button><div className="login-avatar"><i/><b/></div><h2>Crear cuenta</h2><Status/>
+        <button className="login-close" type="button" onClick={()=>go("login")}>×</button><div className="login-avatar"><i/><b/></div><h2>Crear cuenta</h2><Status status={status}/>
         <input className={usuario&&!usuario.trim()?"invalid":""} value={usuario} onChange={e=>setUsuario(e.target.value)} placeholder="Usuario"/>
         <input className={email&&!emailOk(email)?"invalid":""} type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="Correo electrónico"/>
         <input className={contrasena&&!validPassword?"invalid":""} type="password" value={contrasena} onChange={e=>setContrasena(e.target.value)} placeholder="Contraseña"/>
@@ -91,14 +96,14 @@ export default function Login({ onLogin }) {
       </form>}
       {view==="forgot"&&<form className="login-card auth-card-wide" onSubmit={submitRecovery}>
         <button className="login-close" type="button" onClick={()=>go("login")}>×</button><div className="login-avatar"><i/><b/></div><h2>Recuperar contraseña</h2>
-        <p className="auth-help">Ingresá el correo asociado a tu cuenta. El backend enviará un enlace con token.</p><Status/>
+        <p className="auth-help">Ingresá el correo asociado a tu cuenta. El backend enviará un enlace con token.</p><Status status={status}/>
         <input className={email&&!emailOk(email)?"invalid":""} type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="Correo electrónico"/>
         <button className="login-submit" disabled={loading||!emailOk(email)}>{loading?"Enviando...":"Enviar instrucciones"}</button>
         <div className="auth-links"><button type="button" onClick={()=>go("login")}>← Volver a iniciar sesión</button></div>
       </form>}
       {view==="reset"&&<form className="login-card auth-card-wide" onSubmit={submitReset}>
         <div className="login-avatar"><i/><b/></div><h2>Nueva contraseña</h2>
-        <p className="auth-help">Definí una nueva contraseña para recuperar el acceso.</p><Status/>
+        <p className="auth-help">Definí una nueva contraseña para recuperar el acceso.</p><Status status={status}/>
         <input className={contrasena&&!validPassword?"invalid":""} type="password" value={contrasena} onChange={e=>setContrasena(e.target.value)} placeholder="Nueva contraseña"/>
         <PasswordStrength value={contrasena}/>
         <input className={confirmar&&confirmar!==contrasena?"invalid":""} type="password" value={confirmar} onChange={e=>setConfirmar(e.target.value)} placeholder="Confirmar nueva contraseña"/>
