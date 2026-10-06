@@ -9,6 +9,11 @@ import Login from "./pages/Login";
 import UserProfile from "./components/UserProfile";
 import { session } from "./services/session";
 
+/** La primera letra de quien entro, para el boton del perfil. */
+function inicial(actor = "") {
+  return actor.trim().charAt(0).toUpperCase() || "·";
+}
+
 function App() {
   // La sesion vive en sessionStorage, asi que refrescar la pagina no desloguea.
   const [sesion, setSesion] = useState(() => session.get());
@@ -50,7 +55,7 @@ function App() {
   return (
     <>
       <nav className="top-nav" aria-label="Navegación principal">
-        <div className="top-nav__brand">⌘ <strong>Core Observatory</strong></div>
+        <div className="top-nav__brand"><span className="brand-mark" /><strong>Core Observatory</strong></div>
         <div className="top-nav__links">
           <NavLink to="/" end>1. Historial de eventos</NavLink>
           <NavLink to="/eventos-suscriptos">2. Eventos Suscriptos</NavLink>
@@ -67,8 +72,9 @@ function App() {
             type="button"
             onClick={() => setProfileOpen(true)}
             aria-label="Ver datos del usuario"
+            title={sesion.actor}
           >
-            ♙
+            {inicial(sesion.actor)}
           </button>
         </div>
       </nav>

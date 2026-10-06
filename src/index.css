@@ -1,111 +1,108 @@
+/* ===========================================================================
+   Sistema de estilos del Core Observatory
+   ---------------------------------------------------------------------------
+   Esto es un panel para mirar un flujo de eventos durante un rato largo, no una
+   landing. Todo lo que sigue sale de esa idea: tinta cálida en vez de negro
+   puro, fondos de papel en vez de blanco clínico, líneas de pelo en vez de
+   sombras, y un solo acento —un verde salvia apagado— que se reserva para lo
+   que de verdad importa. El color se gana, no se reparte.
+
+   La jerarquía la hace el espacio y el peso de la tipografía, no las cajas.
+   =========================================================================== */
+
 :root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+  /* --- Tinta ------------------------------------------------------------ */
+  --tinta: #161514;        /* titulos y datos: casi negro, pero calido */
+  --tinta-2: #6b6964;      /* texto corrido */
+  --tinta-3: #9c9a95;      /* etiquetas, placeholders, lo accesorio */
 
-  --sans: system-ui, "Segoe UI", Roboto, sans-serif;
-  --heading: system-ui, "Segoe UI", Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
+  /* --- Papel ------------------------------------------------------------ */
+  --papel: #fff;           /* tarjetas y modales */
+  --papel-2: #faf9f7;      /* fondo de pantalla */
+  --papel-3: #f3f2ef;      /* bloques de codigo, celdas resaltadas */
 
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
+  /* --- Lineas ----------------------------------------------------------- */
+  --linea: #eceae6;        /* el borde por defecto: casi invisible */
+  --linea-fuerte: #dddbd5; /* cuando hace falta separar de verdad */
+
+  /* --- Acento ----------------------------------------------------------- */
+  /* Un verde salvia. Marca lo activo y lo que esta sano, nada mas. */
+  --salvia: #b3b980;
+  --salvia-honda: #6f7748;
+  --salvia-tenue: #f3f5ea;
+
+  /* --- Estados ---------------------------------------------------------- */
+  /* Apagados a proposito: en una tabla de 25 filas el rojo saturado grita y
+     deja de significar algo. Estos se leen sin romper la calma. */
+  --ok: #5c7a5c;      --ok-tenue: #eef3ee;
+  --aviso: #9d7b38;   --aviso-tenue: #f7f1e6;
+  --error: #a4553f;   --error-tenue: #f8efec;
+
+  --sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  --radio: 10px;
+  --radio-pildora: 999px;
+  --ancho: 1180px;        /* el renglon mas largo que se puede leer comodo */
+
+  font: 400 15px/1.6 var(--sans);
+  color: var(--tinta-2);
+  background: var(--papel-2);
   color-scheme: light;
-  color: var(--text);
-  background: var(--bg);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-
-  @media (max-width: 1024px) {
-    font-size: 16px;
-  }
+  text-rendering: optimizeLegibility;
+  font-variant-numeric: tabular-nums;  /* las columnas de numeros se alinean */
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-  }
+*, *::before, *::after { box-sizing: border-box; }
 
-  #social .button-icon {
-    filter: invert(1) brightness(2);
-  }
-}
+body { margin: 0; min-height: 100svh; }
 
-body {
+#root { display: flex; flex-direction: column; min-height: 100svh; }
+
+h1, h2, h3 {
   margin: 0;
-}
-
-#root {
-  width: 100%;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
-  min-height: 100svh;
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
-}
-
-h1,
-h2 {
-  font-family: var(--heading);
+  color: var(--tinta);
   font-weight: 500;
-  color: var(--text-h);
+  letter-spacing: -0.02em;
+  line-height: 1.25;
 }
 
-h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
-  }
-}
-h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
-  }
-}
-p {
-  margin: 0;
-}
+h1 { font-size: 30px; letter-spacing: -0.03em; }
+h2 { font-size: 20px; }
+h3 { font-size: 15px; }
 
-code,
-.counter {
-  font-family: var(--mono);
-  display: inline-flex;
-  border-radius: 4px;
-  color: var(--text-h);
-}
+p { margin: 0; }
 
+a { color: var(--salvia-honda); text-decoration: none; }
+a:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+/* Los identificadores técnicos —tipos de evento, nombres de cola, módulos— van
+   en mono en todo el panel. Es lo que se copia y se pega en una consola. */
 code {
-  font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
+  font: 400 0.92em/1.4 var(--mono);
+  color: var(--tinta);
+  letter-spacing: -0.01em;
+}
+
+button, input, select, textarea { font: inherit; color: inherit; }
+
+:focus-visible {
+  outline: 2px solid var(--salvia-honda);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+::selection { background: var(--salvia-tenue); color: var(--tinta); }
+
+/* Barras de scroll discretas: en un panel con tablas largas, la barra gris de
+   siempre es lo primero que ensucia la pantalla. */
+* { scrollbar-width: thin; scrollbar-color: var(--linea-fuerte) transparent; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: var(--linea-fuerte); border-radius: 999px; border: 3px solid var(--papel-2); }
+::-webkit-scrollbar-track { background: transparent; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }

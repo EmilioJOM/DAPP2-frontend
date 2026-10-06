@@ -17,8 +17,8 @@ export default function JsonModal({ data, onClose }) {
       <section className="json-modal" role="dialog" aria-modal="true" aria-labelledby="json-modal-title" onMouseDown={(e)=>e.stopPropagation()}>
         <header>
           <div>
-            <span className="json-modal-kicker">EVENT PAYLOAD</span>
-            <h2 id="json-modal-title">Código JSON</h2>
+            <span className="json-modal-kicker">Sobre del evento</span>
+            <h2 id="json-modal-title">{data.eventType ?? "Código JSON"}</h2>
           </div>
           <button className="json-modal-close" type="button" onClick={onClose} aria-label="Cerrar">×</button>
         </header>

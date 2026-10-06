@@ -32,48 +32,40 @@ export default function Login({ onLogin, aviso = "" }) {
 
   return (
     <div className="login-screen">
-      <div className="login-preview-nav">
-        <span>1. Historial de eventos</span>
-        <span>2. Eventos Suscriptos</span>
-        <span>3. Métricas</span>
-        <span>4. Suscripciones</span>
-        <span>●</span>
-      </div>
-      <div className="login-overlay">
-        <form className="login-card auth-card-wide" onSubmit={submit}>
-          <div className="login-avatar"><i /><b /></div>
-          <h2>Iniciar sesión</h2>
-          {aviso && !status.message && (
-            <p className="auth-status error" role="status">{aviso}</p>
-          )}
-          {status.message && (
-            <p className={`auth-status ${status.type}`} role="status">{status.message}</p>
-          )}
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="Correo electrónico"
-            autoComplete="username"
-            aria-label="Correo electrónico"
-          />
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Contraseña"
-            autoComplete="current-password"
-            aria-label="Contraseña"
-          />
-          <button className="login-submit" disabled={loading}>
-            {loading ? "Ingresando..." : "Iniciar Sesión"}
-          </button>
-          <p className="auth-help">
-            Las cuentas las crea tu equipo desde el panel. Si no tenés uno,
-            pedíselo a alguien de tu módulo.
-          </p>
-        </form>
-      </div>
+      <form className="login-card" onSubmit={submit}>
+        <div className="login-mark"><span />Core Observatory</div>
+        <h2>Iniciar sesión</h2>
+        <p className="login-sub">El pasamanos de eventos de la plataforma municipal.</p>
+        {aviso && !status.message && (
+          <p className="auth-status error" role="status">{aviso}</p>
+        )}
+        {status.message && (
+          <p className={`auth-status ${status.type}`} role="status">{status.message}</p>
+        )}
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="Correo electrónico"
+          autoComplete="username"
+          aria-label="Correo electrónico"
+        />
+        <input
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="Contraseña"
+          autoComplete="current-password"
+          aria-label="Contraseña"
+        />
+        <button className="login-submit primary" disabled={loading}>
+          {loading ? "Ingresando..." : "Iniciar sesión"}
+        </button>
+        <p className="auth-help">
+          Las cuentas las crea tu equipo desde el panel. Si todavía no tenés una,
+          pedísela a alguien de tu módulo.
+        </p>
+      </form>
     </div>
   );
 }

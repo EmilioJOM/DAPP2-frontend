@@ -59,7 +59,7 @@ export default function UserProfile({ sesion, onClose, onLogout }) {
       >
         <button className="user-dialog-close" type="button" onClick={onClose} aria-label="Cerrar">×</button>
         <header className="profile-head">
-          <div className="profile-avatar"><span>♙</span></div>
+          <div className="profile-avatar">{(cuenta?.fullName ?? sesion.actor ?? "·").trim().charAt(0).toUpperCase()}</div>
           <div>
             <h2 id="profile-title">{cuenta?.fullName ?? sesion.actor}</h2>
             <p>{cuenta?.email ?? sesion.actor}</p>

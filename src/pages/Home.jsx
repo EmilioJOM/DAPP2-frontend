@@ -128,7 +128,7 @@ export default function Home() {
                     <td>{evento.sourceModule}</td>
                     <td>{fecha(evento.occurredAt)}</td>
                     <td>{fecha(evento.receivedAt)}</td>
-                    <td className={`estado estado--${estado.tono}`}>● {estado.texto}</td>
+                    <td className={`estado estado--${estado.tono}`}>{estado.texto}</td>
                     <td>
                       {evento.deliveredCount}/{evento.deliveryCount}
                       {evento.rejectionCode && <small> · {evento.rejectionCode}</small>}

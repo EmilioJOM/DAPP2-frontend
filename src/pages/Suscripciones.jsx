@@ -70,15 +70,11 @@ export default function Suscripciones() {
       <div className="subscription-selector-grid">
         {modulos.map((modulo) => {
           const activos = modulo.events.filter((e) => suscriptos.has(e.name)).length;
-          const marcado = elegidos.length === 0 || elegidos.includes(modulo.id);
+          const marcado = elegidos.includes(modulo.id);
           return (
             <article className={`module-choice ${marcado ? "selected" : ""}`} key={modulo.id}>
               <label className="module-choice-main">
-                <input
-                  type="checkbox"
-                  checked={elegidos.includes(modulo.id)}
-                  onChange={() => alternar(modulo.id)}
-                />
+                <input type="checkbox" checked={marcado} onChange={() => alternar(modulo.id)} />
                 <span>
                   <strong>{modulo.displayName ?? modulo.name}</strong>
                   <code>{modulo.name}</code>

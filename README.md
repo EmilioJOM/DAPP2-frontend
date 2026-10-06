@@ -76,9 +76,29 @@ lista mostraba eventos que no existen. Ahora sale de `GET /event-types`.
 
 ---
 
+## Cómo se ve
+
+Esto es un panel para mirar un flujo de eventos durante un rato largo, no una
+landing. De ahí sale todo lo visual: tinta cálida (`#161514`) en vez de negro
+puro, fondos de papel en vez de blanco clínico, líneas de pelo en vez de
+sombras, y **un solo acento** —un verde salvia apagado— reservado para lo que
+está activo y lo que está sano. La jerarquía la hacen el espacio y el peso de la
+tipografía, no las cajas.
+
+Los estados también van desaturados a propósito: en una tabla de 25 filas el
+rojo saturado grita y deja de significar algo.
+
+Los identificadores técnicos —tipos de evento, nombres de cola, módulos— van
+siempre en mono. Es lo que uno copia y pega en una consola.
+
+Las variables están todas en `src/index.css`; `src/App.css` solo arma las
+pantallas con ellas. Para cambiar la paleta entera se tocan diez líneas.
+
 ## Cómo está armado
 
 ```
+src/index.css   tokens: color, tipografía, radios, base del documento
+src/App.css     las pantallas, armadas sobre esos tokens
 src/services/   una capa por recurso del Core: api, auth, session,
                 catalog, subscriptions, events, metrics
 src/pages/      las cuatro pantallas
