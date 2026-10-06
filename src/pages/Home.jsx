@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import JsonModal from "../components/JsonModal";
+import { EsqueletoTabla } from "../components/Esqueleto";
 import { estadoDeEvento, listarEventos, obtenerEvento } from "../services/events";
 import { mensajeDeError } from "../services/api";
 import { session } from "../services/session";
@@ -91,7 +92,7 @@ export default function Home() {
 
       {error && <div className="notice error" role="alert">{error}</div>}
 
-      {cargando && <div className="notice">Cargando eventos...</div>}
+      {cargando && <EsqueletoTabla filas={8} columnas={7} />}
 
       {!cargando && !error && eventos.length === 0 && (
         <div className="empty-selection">

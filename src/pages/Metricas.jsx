@@ -7,6 +7,7 @@ import {
   tableroDelModulo,
   tableroGlobal,
 } from "../services/metrics";
+import { EsqueletoKpis, EsqueletoTabla } from "../components/Esqueleto";
 import { mensajeDeError } from "../services/api";
 import { session } from "../services/session";
 
@@ -16,9 +17,9 @@ const VENTANAS = [
   { horas: 168, etiqueta: "7 días" },
 ];
 
-function Kpi({ titulo, valor, detalle }) {
+function Kpi({ titulo, valor, detalle, urgente = false }) {
   return (
-    <article className="kpi">
+    <article className={`kpi ${urgente ? "urgente" : ""}`}>
       <b>{titulo}</b>
       <strong className="kpi-value">{valor}</strong>
       {detalle && <p>{detalle}</p>}
@@ -26,15 +27,25 @@ function Kpi({ titulo, valor, detalle }) {
   );
 }
 
-/** Barras del volumen por hora. Sin libreria: son 24 barras. */
+/**
+ * Volumen por hora. Sin libreria: son 24 barras y una grilla de fondo en CSS.
+ *
+ * Solo se etiqueta una hora de cada tres y se anota el pico: con las 24 puestas
+ * el eje se vuelve ruido y el ojo deja de ver la forma, que es lo unico que
+ * importa en un grafico de esta altura.
+ */
 function VolumenPorHora({ puntos }) {
   if (!puntos?.length) {
     return <p className="empty-note">Sin eventos en la ventana elegida.</p>;
   }
   const maximo = Math.max(...puntos.map((p) => p.total), 1);
+  const indicePico = puntos.findIndex((p) => p.total === maximo);
+  const cada = puntos.length > 14 ? 3 : 1;
+
   return (
-    <div className="volume-chart">
-      {puntos.map((punto) => {
+    <div className="volume-chart" role="img"
+         aria-label={`Volumen por hora: ${puntos.reduce((n, p) => n + p.total, 0)} eventos, pico de ${maximo}`}>
+      {puntos.map((punto, i) => {
         const hora = new Date(punto.hour);
         return (
           <div
@@ -44,17 +55,16 @@ function VolumenPorHora({ puntos }) {
               punto.rejected ? ` · ${punto.rejected} rechazados` : ""
             }`}
           >
-            <span
-              className="volume-bar-fill"
-              style={{ height: `${Math.round((punto.total / maximo) * 100)}%` }}
-            />
+            <span className="volume-bar-fill" style={{ height: `${(punto.total / maximo) * 100}%` }}>
+              {i === indicePico && <span className="volume-pico">{maximo}</span>}
+            </span>
             {punto.rejected > 0 && (
               <span
                 className="volume-bar-rejected"
-                style={{ height: `${Math.round((punto.rejected / maximo) * 100)}%` }}
+                style={{ height: `${(punto.rejected / maximo) * 100}%` }}
               />
             )}
-            <small>{String(hora.getHours()).padStart(2, "0")}</small>
+            <small>{i % cada === 0 ? String(hora.getHours()).padStart(2, "0") : "\u00a0"}</small>
           </div>
         );
       })}
@@ -132,7 +142,16 @@ export default function Metricas() {
     return () => { vigente = false; };
   }, [clave, global, otroModulo, moduloPedido, ventana]);
 
-  if (cargando) return <div className="screen metrics"><div className="notice">Cargando métricas...</div></div>;
+  if (cargando) {
+    return (
+      <div className="screen metrics">
+        <div className="crumb">Observatory / Telemetría</div>
+        <header className="page-head"><div><h1>Métricas</h1></div></header>
+        <EsqueletoKpis />
+        <EsqueletoTabla filas={4} columnas={5} />
+      </div>
+    );
+  }
   if (error) return <div className="screen metrics"><div className="notice error" role="alert">{error}</div></div>;
   if (!tablero) return null;
 
@@ -184,20 +203,7 @@ export default function Metricas() {
         <VolumenPorHora puntos={tablero.volumeByHour} />
       </section>
 
-      {alertas.length > 0 && (
-        <section className="alerts-panel">
-          <h3 className="section-title">Alertas de integración ({alertas.length})</h3>
-          <ul className="alert-list">
-            {alertas.map((alerta, i) => (
-              <li className={`alert ${alerta.severity}`} key={`${alerta.kind}-${alerta.eventType}-${i}`}>
-                <span className="alert-kind">{alerta.kind}</span>
-                <code>{alerta.eventType}</code>
-                <p>{alerta.detail}</p>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
+      {alertas.length > 0 && <Alertas alertas={alertas} />}
     </div>
   );
 }
@@ -213,7 +219,7 @@ function VistaDeModulo({ tablero }) {
           valor={received.total}
           detalle={`${received.delivered} entregados · ${received.pendingRetry} reintentando`}
         />
-        <Kpi titulo="En dead letter" valor={deadLetters.open} detalle="Abiertos, esperando reproceso" />
+        <Kpi titulo="En dead letter" valor={deadLetters.open} detalle="Abiertos, esperando reproceso" urgente={deadLetters.open > 0} />
         <Kpi
           titulo="Procesamiento"
           valor={`${processing.avgMs} ms`}
@@ -261,7 +267,7 @@ function VistaGlobal({ tablero }) {
       <div className="kpi-grid">
         <Kpi titulo="Eventos en la ventana" valor={events.total} detalle={`${events.lastHour} en la última hora`} />
         <Kpi titulo="Por minuto" valor={events.perMinuteLastHour} detalle="Promedio de la última hora" />
-        <Kpi titulo="Dead letters abiertos" valor={deadLetters.open} detalle="A reprocesar o descartar" />
+        <Kpi titulo="Dead letters abiertos" valor={deadLetters.open} detalle="A reprocesar o descartar" urgente={deadLetters.open > 0} />
         <Kpi
           titulo="Procesamiento"
           valor={`${events.processing.avgMs} ms`}
@@ -306,5 +312,64 @@ function VistaGlobal({ tablero }) {
         </tbody>
       </table>
     </>
+  );
+}
+
+/**
+ * Las alertas de integracion, agrupadas por severidad.
+ *
+ * Son el calculo mas valioso del Core —los agujeros entre equipos que aparecen
+ * solos cruzando quien publica que con quien consume que— pero hoy son 66. En
+ * una lista plana no se leen. Las que piden accion van primero y abiertas; las
+ * informativas arrancan plegadas.
+ */
+function Alertas({ alertas }) {
+  const grupos = [
+    { clave: "warning", titulo: "Requieren atención", abiertoPorDefecto: true },
+    { clave: "info", titulo: "Informativas", abiertoPorDefecto: false },
+  ]
+    .map((g) => ({ ...g, items: alertas.filter((a) => a.severity === g.clave) }))
+    .filter((g) => g.items.length);
+
+  // Cualquier severidad que no sea warning/info igual tiene que verse.
+  const otras = alertas.filter((a) => !["warning", "info"].includes(a.severity));
+  if (otras.length) grupos.push({ clave: "info", titulo: "Otras", items: otras, abiertoPorDefecto: false });
+
+  return (
+    <section className="alerts-panel">
+      <h3 className="section-title">Alertas de integración ({alertas.length})</h3>
+      {grupos.map((grupo, i) => (
+        <GrupoDeAlertas key={`${grupo.titulo}-${i}`} {...grupo} />
+      ))}
+    </section>
+  );
+}
+
+function GrupoDeAlertas({ clave, titulo, items, abiertoPorDefecto }) {
+  const [abierto, setAbierto] = useState(abiertoPorDefecto);
+  return (
+    <div className={`alertas-grupo ${clave}`}>
+      <button
+        type="button"
+        className="alertas-cabecera"
+        aria-expanded={abierto}
+        onClick={() => setAbierto((a) => !a)}
+      >
+        <span className="flecha" aria-hidden="true">›</span>
+        {titulo}
+        <span className="cuenta">{items.length}</span>
+      </button>
+      {abierto && (
+        <ul className="alert-list">
+          {items.map((alerta, i) => (
+            <li className={`alert ${alerta.severity}`} key={`${alerta.kind}-${alerta.eventType}-${i}`}>
+              <span className="alert-kind">{alerta.kind}</span>
+              <code>{alerta.eventType}</code>
+              <p>{alerta.detail}</p>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 }

@@ -79,20 +79,37 @@ lista mostraba eventos que no existen. Ahora sale de `GET /event-types`.
 ## Cómo se ve
 
 Esto es un panel para mirar un flujo de eventos durante un rato largo, no una
-landing. De ahí sale todo lo visual: tinta cálida (`#161514`) en vez de negro
-puro, fondos de papel en vez de blanco clínico, líneas de pelo en vez de
-sombras, y **un solo acento** —un verde salvia apagado— reservado para lo que
-está activo y lo que está sano. La jerarquía la hacen el espacio y el peso de la
-tipografía, no las cajas.
+landing. De ahí sale todo lo visual: tinta azul marino (`#0d1b2a`) en vez de
+negro, papel con un grado de azul en vez de blanco clínico, líneas de pelo en
+vez de sombras, y **un solo acento** —un celeste— reservado para lo que está
+vivo: lo activo, lo que fluye, lo accionable. La jerarquía la hacen el espacio y
+el peso de la tipografía, no las cajas.
 
-Los estados también van desaturados a propósito: en una tabla de 25 filas el
-rojo saturado grita y deja de significar algo.
+Los estados van desaturados a propósito: en una tabla de 25 filas el rojo
+saturado grita y deja de significar algo.
 
 Los identificadores técnicos —tipos de evento, nombres de cola, módulos— van
 siempre en mono. Es lo que uno copia y pega en una consola.
 
+**Contraste.** Cada par de texto sobre fondo está verificado contra WCAG AA
+(4.5:1). El celeste brillante nunca lleva texto encima —es para rellenos, barras
+y estados activos—; cuando hace falta azul legible se usa `--azul`, que da 6.9:1
+sobre blanco.
+
 Las variables están todas en `src/index.css`; `src/App.css` solo arma las
 pantallas con ellas. Para cambiar la paleta entera se tocan diez líneas.
+
+### Detalles que hacen al uso
+
+- **Esqueletos de carga** en vez de un cartel de "Cargando...": reservan el lugar
+  exacto que van a ocupar los datos, así la pantalla no salta al llegar.
+- **Las alertas de integración se agrupan por severidad.** Son el cálculo más
+  valioso del Core, pero son 66: en una lista plana no se leen. Las que piden
+  acción van primero y abiertas; las informativas arrancan plegadas.
+- **Los dead letters se pintan de rojo cuando hay alguno.** Es el único número
+  del tablero sobre el que se puede actuar; en cero es un dato más.
+- **El gráfico de volumen** etiqueta una hora de cada tres y anota el pico. Con
+  las 24 puestas el eje se vuelve ruido y se deja de ver la forma.
 
 ## Cómo está armado
 

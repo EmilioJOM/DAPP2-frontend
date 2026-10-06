@@ -2,41 +2,47 @@
    Sistema de estilos del Core Observatory
    ---------------------------------------------------------------------------
    Esto es un panel para mirar un flujo de eventos durante un rato largo, no una
-   landing. Todo lo que sigue sale de esa idea: tinta cálida en vez de negro
-   puro, fondos de papel en vez de blanco clínico, líneas de pelo en vez de
-   sombras, y un solo acento —un verde salvia apagado— que se reserva para lo
-   que de verdad importa. El color se gana, no se reparte.
+   landing. De ahí sale todo: tinta azul marino en vez de negro, papel con un
+   toque frío, líneas de pelo en vez de sombras, y un celeste que se reserva
+   para lo que está vivo —lo activo, lo que fluye, lo accionable—. El color se
+   gana, no se reparte.
 
-   La jerarquía la hace el espacio y el peso de la tipografía, no las cajas.
+   La jerarquía la hacen el espacio y el peso de la tipografía, no las cajas.
+
+   Todos los pares de texto/fondo están verificados contra WCAG AA (4.5:1).
+   El celeste brillante NUNCA lleva texto encima: es para rellenos, barras y
+   estados activos. Cuando hace falta azul legible se usa --azul.
    =========================================================================== */
 
 :root {
   /* --- Tinta ------------------------------------------------------------ */
-  --tinta: #161514;        /* titulos y datos: casi negro, pero calido */
-  --tinta-2: #6b6964;      /* texto corrido */
-  --tinta-3: #9c9a95;      /* etiquetas, placeholders, lo accesorio */
+  --tinta: #0d1b2a;        /* titulos y datos. 17.4:1 sobre blanco */
+  --tinta-2: #4c637a;      /* texto corrido.    6.2:1 */
+  --tinta-3: #59718b;      /* etiquetas y placeholders. 4.8:1 sobre papel-2 */
 
   /* --- Papel ------------------------------------------------------------ */
-  --papel: #fff;           /* tarjetas y modales */
-  --papel-2: #faf9f7;      /* fondo de pantalla */
-  --papel-3: #f3f2ef;      /* bloques de codigo, celdas resaltadas */
+  --papel: #fff;           /* tarjetas, tablas, modales */
+  --papel-2: #f4f9fd;      /* fondo de pantalla, con un grado de azul */
+  --papel-3: #e9f1f8;      /* bloques de codigo y celdas resaltadas */
 
   /* --- Lineas ----------------------------------------------------------- */
-  --linea: #eceae6;        /* el borde por defecto: casi invisible */
-  --linea-fuerte: #dddbd5; /* cuando hace falta separar de verdad */
+  --linea: #e1ebf4;        /* el borde por defecto: casi invisible */
+  --linea-fuerte: #c9dced; /* cuando hace falta separar de verdad */
 
   /* --- Acento ----------------------------------------------------------- */
-  /* Un verde salvia. Marca lo activo y lo que esta sano, nada mas. */
-  --salvia: #b3b980;
-  --salvia-honda: #6f7748;
-  --salvia-tenue: #f3f5ea;
+  --celeste: #2b9fe0;        /* rellenos, barras, marcas. NO para texto */
+  --celeste-claro: #8fd0f2;  /* degrade del grafico */
+  --azul: #0f5f8c;           /* enlaces, botones primarios, texto de acento */
+  --azul-hondo: #0a4668;     /* hover de lo primario */
+  --celeste-tenue: #e9f4fb;  /* fondos teñidos de lo activo */
+  --celeste-borde: #b9dcf3;  /* bordes de lo seleccionado */
 
   /* --- Estados ---------------------------------------------------------- */
   /* Apagados a proposito: en una tabla de 25 filas el rojo saturado grita y
      deja de significar algo. Estos se leen sin romper la calma. */
-  --ok: #5c7a5c;      --ok-tenue: #eef3ee;
-  --aviso: #9d7b38;   --aviso-tenue: #f7f1e6;
-  --error: #a4553f;   --error-tenue: #f8efec;
+  --ok: #367263;      --ok-tenue: #eaf4f0;
+  --aviso: #94671e;   --aviso-tenue: #fbf3e4;
+  --error: #b5342c;   --error-tenue: #fbeceb;
 
   --sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
@@ -75,7 +81,7 @@ h3 { font-size: 15px; }
 
 p { margin: 0; }
 
-a { color: var(--salvia-honda); text-decoration: none; }
+a { color: var(--azul); text-decoration: none; }
 a:hover { text-decoration: underline; text-underline-offset: 3px; }
 
 /* Los identificadores técnicos —tipos de evento, nombres de cola, módulos— van
@@ -89,12 +95,12 @@ code {
 button, input, select, textarea { font: inherit; color: inherit; }
 
 :focus-visible {
-  outline: 2px solid var(--salvia-honda);
+  outline: 2px solid var(--azul);
   outline-offset: 2px;
   border-radius: 3px;
 }
 
-::selection { background: var(--salvia-tenue); color: var(--tinta); }
+::selection { background: var(--celeste-tenue); color: var(--tinta); }
 
 /* Barras de scroll discretas: en un panel con tablas largas, la barra gris de
    siempre es lo primero que ensucia la pantalla. */
@@ -102,6 +108,9 @@ button, input, select, textarea { font: inherit; color: inherit; }
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-thumb { background: var(--linea-fuerte); border-radius: 999px; border: 3px solid var(--papel-2); }
 ::-webkit-scrollbar-track { background: transparent; }
+
+/* El latido de lo que está cargando. Un solo keyframe para todos los esqueletos. */
+@keyframes respirar { 0%, 100% { opacity: 1 } 50% { opacity: .45 } }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }

@@ -73,6 +73,17 @@ describe('Historial de eventos', () => {
     ).toBeInTheDocument()
   })
 
+  test('mientras espera al Core muestra el esqueleto, no una pantalla vacía', async () => {
+    // Una promesa que no se resuelve: deja la pantalla en su estado de carga.
+    listarEventos.mockReturnValue(new Promise(() => {}))
+
+    const { container } = pantalla()
+
+    expect(container.querySelector('[aria-busy="true"]')).toBeInTheDocument()
+    expect(container.querySelectorAll('.esqueleto-fila')).toHaveLength(8)
+    expect(screen.getByText(/cargando/i)).toBeInTheDocument()
+  })
+
   test('avisa si el Core no responde', async () => {
     listarEventos.mockRejectedValue(new Error('network'))
 

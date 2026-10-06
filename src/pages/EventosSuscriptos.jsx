@@ -3,6 +3,7 @@ import { Link } from "react-router";
 import { catalogoPorModulo } from "../services/catalog";
 import { listarSuscripciones, sincronizar } from "../services/subscriptions";
 import { modulosVisibles } from "../services/subscriptionPreferences";
+import { EsqueletoTarjetas } from "../components/Esqueleto";
 import { mensajeDeError } from "../services/api";
 import { session } from "../services/session";
 
@@ -78,7 +79,15 @@ export default function EventosSuscriptos() {
     }
   };
 
-  if (cargando) return <div className="screen subscribed"><div className="notice">Cargando...</div></div>;
+  if (cargando) {
+    return (
+      <div className="screen subscribed">
+        <div className="crumb">Observatory / Eventos Suscriptos</div>
+        <header className="page-head"><div><h1>Eventos Suscriptos</h1></div></header>
+        <EsqueletoTarjetas cantidad={6} alto={240} />
+      </div>
+    );
+  }
 
   if (!modulos.length) {
     return (

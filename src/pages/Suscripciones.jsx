@@ -3,6 +3,7 @@ import { Link } from "react-router";
 import { catalogoPorModulo } from "../services/catalog";
 import { listarSuscripciones } from "../services/subscriptions";
 import { guardarModulosVisibles, modulosVisibles } from "../services/subscriptionPreferences";
+import { EsqueletoTarjetas } from "../components/Esqueleto";
 import { mensajeDeError } from "../services/api";
 import { session } from "../services/session";
 
@@ -48,7 +49,15 @@ export default function Suscripciones() {
     setGuardado(true);
   };
 
-  if (cargando) return <div className="screen subscriptions"><div className="notice">Cargando catálogo...</div></div>;
+  if (cargando) {
+    return (
+      <div className="screen subscriptions">
+        <div className="crumb">Observatory / Suscripciones / Selección de módulos</div>
+        <header className="page-head"><div><h1>Suscripciones</h1></div></header>
+        <EsqueletoTarjetas cantidad={9} alto={120} />
+      </div>
+    );
+  }
   if (error) return <div className="screen subscriptions"><div className="notice error" role="alert">{error}</div></div>;
 
   return (
