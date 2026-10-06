@@ -1,42 +1,53 @@
 import api from "./api";
+import { session } from "./session";
 
-const MOCK_DELAY = 650;
-const wait = (value) => new Promise((resolve) => setTimeout(() => resolve(value), MOCK_DELAY));
-
+/**
+ * Autenticacion contra el Core.
+ *
+ * El Core no es un sistema de registro abierto: las cuentas las crea cada
+ * equipo desde el panel con `POST /users`. Por eso aca no hay registro ni
+ * recuperacion de contrasena.
+ */
 export const authService = {
-  async login(credentials) {
-    // BACKEND TODO: return (await api.post("/auth/login", credentials)).data;
-    void api;
-    return wait({
-      user: {
-        id: "usr-demo",
-        nombre: credentials.usuario,
-        usuario: credentials.usuario,
-        email: credentials.email || `${credentials.usuario}@core.local`,
-        avatar: "",
-        roles: ["Operador"],
-      },
-      accessToken: "demo-memory-token",
-    });
+  /** POST /auth/login — email y contrasena de una persona. */
+  async login({ email, password }) {
+    const { data } = await api.post("/auth/login", { email, password });
+    return session.start(data);
   },
-  async register(payload) {
-    // BACKEND TODO: return (await api.post("/auth/register", payload)).data;
-    void api; void payload; return wait({ ok: true });
+
+  /** GET /auth/me — para restaurar la sesion al refrescar la pagina. */
+  async me() {
+    const { data } = await api.get("/auth/me");
+    return data;
   },
-  async requestPasswordReset(email) {
-    // BACKEND TODO: return (await api.post("/auth/password/forgot", { email })).data;
-    void api; return wait({ ok: true, email });
+
+  /** PUT /users/{id}/password */
+  async cambiarPassword(userId, password) {
+    const { data } = await api.put(`/users/${userId}/password`, { password });
+    return data;
   },
-  async resetPassword(token, password) {
-    // BACKEND TODO: return (await api.post("/auth/password/reset", { token, password })).data;
-    void api; void token; void password; return wait({ ok: true });
+
+  /** GET /users — las cuentas del equipo. El admin ve las de todos. */
+  async listarCuentas() {
+    const { data } = await api.get("/users");
+    return data;
   },
-  async updateProfile(payload) {
-    // BACKEND TODO: return (await api.put("/users/me", payload)).data;
-    void api; return wait({ ...payload });
+
+  /**
+   * La cuenta de quien esta logueado.
+   *
+   * Ni el login ni `/auth/me` devuelven el id, y para cambiar la contrasena
+   * hace falta: se busca por email en el listado del equipo.
+   */
+  async miCuenta() {
+    const yo = await this.me();
+    if (!yo.email) return null;
+    const cuentas = await this.listarCuentas();
+    const items = Array.isArray(cuentas) ? cuentas : (cuentas.items ?? []);
+    return items.find((u) => u.email === yo.email) ?? null;
   },
-  async changePassword(payload) {
-    // BACKEND TODO: return (await api.put("/users/me/password", payload)).data;
-    void api; void payload; return wait({ ok: true });
+
+  logout() {
+    session.clear();
   },
 };

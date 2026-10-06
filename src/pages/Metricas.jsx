@@ -1,33 +1,310 @@
+import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router";
-import { moduleCatalog } from "../services/subscriptionPreferences";
+import {
+  alertasDeIntegracion,
+  estadoDelCore,
+  tableroDe,
+  tableroDelModulo,
+  tableroGlobal,
+} from "../services/metrics";
+import { mensajeDeError } from "../services/api";
+import { session } from "../services/session";
 
-const globalKpis=[['Throughput Global','Tasa bruta de ingestión y emisión medida en eventos por segundo (eps).'],['Latencia por Servicio','Distribución de percentiles de procesamiento p50 / p95 / p99 extremo a extremo.'],['Tasas DLQ y Fallos','Monitoreo del ratio de descarte y volumen encolado en Dead Letter Queues por microservicio.'],['Kafka & Particiones','Retención, consumer lag, balance de particiones y réplicas sincronizadas (ISR) por cluster.']];
-const moduleKpis=[['Throughput del Módulo','Tasa de eventos procesados por segundo para este módulo.'],['Latencia del Módulo','Percentiles p50 / p95 / p99 de procesamiento del módulo.'],['Fallos y DLQ','Tasa de errores y eventos derivados a Dead Letter Queue.'],['Eventos Observados','Tipos de evento publicados o consumidos por el módulo.']];
+const VENTANAS = [
+  { horas: 1, etiqueta: "1 h" },
+  { horas: 24, etiqueta: "24 h" },
+  { horas: 168, etiqueta: "7 días" },
+];
 
-export default function Metricas(){
-  const [searchParams]=useSearchParams();
-  const moduleId=searchParams.get("module");
-  const module=moduleCatalog.find((item)=>item.id===moduleId);
-  const scoped=Boolean(module);
-  const kpis=scoped?moduleKpis:globalKpis;
+function Kpi({ titulo, valor, detalle }) {
+  return (
+    <article className="kpi">
+      <b>{titulo}</b>
+      <strong className="kpi-value">{valor}</strong>
+      {detalle && <p>{detalle}</p>}
+    </article>
+  );
+}
 
-  return <div className="screen metrics">
-    <div className="crumb">OBSERVATORY / TELEMETRÍA / {scoped?module.name.toUpperCase():"MÉTRICAS CORE"}</div>
-    <header className="page-head">
-      <div>
-        <b>▥ ESTADO: NO DEFINIDO — SEC. 12 DE ESPECIFICACIÓN FUNCIONAL</b>
-        <h1>{scoped?`Métricas: ${module.name}`:"Métricas del Core de Microservicios"}</h1>
-        {scoped&&<code>{module.code}</code>}
+/** Barras del volumen por hora. Sin libreria: son 24 barras. */
+function VolumenPorHora({ puntos }) {
+  if (!puntos?.length) {
+    return <p className="empty-note">Sin eventos en la ventana elegida.</p>;
+  }
+  const maximo = Math.max(...puntos.map((p) => p.total), 1);
+  return (
+    <div className="volume-chart">
+      {puntos.map((punto) => {
+        const hora = new Date(punto.hour);
+        return (
+          <div
+            className="volume-bar"
+            key={punto.hour}
+            title={`${hora.toLocaleString()} · ${punto.total} eventos${
+              punto.rejected ? ` · ${punto.rejected} rechazados` : ""
+            }`}
+          >
+            <span
+              className="volume-bar-fill"
+              style={{ height: `${Math.round((punto.total / maximo) * 100)}%` }}
+            />
+            {punto.rejected > 0 && (
+              <span
+                className="volume-bar-rejected"
+                style={{ height: `${Math.round((punto.rejected / maximo) * 100)}%` }}
+              />
+            )}
+            <small>{String(hora.getHours()).padStart(2, "0")}</small>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function Lista({ titulo, filas, clave, valor, vacio }) {
+  return (
+    <div className="fake-chart">
+      <b>{titulo}</b>
+      {filas?.length ? (
+        <ul className="plain-list">
+          {filas.map((fila) => (
+            <li key={fila[clave]}>
+              <span>{fila[clave]}</span>
+              <strong>{fila[valor]}</strong>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="empty-note">{vacio}</p>
+      )}
+    </div>
+  );
+}
+
+export default function Metricas() {
+  const [searchParams] = useSearchParams();
+  const moduloPedido = searchParams.get("module");
+  const esAdmin = session.esAdmin();
+
+  const [ventana, setVentana] = useState(24);
+
+  // Solo el admin puede mirar otro modulo: sin `?module=` ve el hub completo,
+  // y con `?module=` el tablero de ese equipo. El resto siempre ve lo suyo.
+  const global = esAdmin && !moduloPedido;
+  const otroModulo = esAdmin && moduloPedido && moduloPedido !== session.getModulo();
+
+  // `clave` es la consulta pedida y `datos.clave` la que ya respondio: mientras
+  // no coinciden la pantalla esta cargando. Asi el indicador no depende de que
+  // cada rama se acuerde de apagarlo.
+  const clave = `${global}|${moduloPedido ?? ""}|${ventana}`;
+  const [datos, setDatos] = useState(null);
+  const cargando = datos?.clave !== clave;
+  const error = datos?.error ?? "";
+  const tablero = datos?.tablero ?? null;
+  const alertas = datos?.alertas ?? [];
+  const salud = datos?.salud ?? null;
+
+  useEffect(() => {
+    let vigente = true;
+    const pedido = global
+      ? tableroGlobal({ windowHours: ventana })
+      : otroModulo
+        ? tableroDe(moduloPedido, { windowHours: ventana })
+        : tableroDelModulo({ windowHours: ventana });
+
+    pedido
+      .then(async (tablero) => [
+        tablero,
+        // El tablero global ya trae las alertas adentro; el de un modulo no.
+        global ? (tablero.integrationAlerts ?? []) : await alertasDeIntegracion(),
+        await estadoDelCore().catch(() => null),
+      ])
+      .then(([tablero, alertas, salud]) => {
+        if (vigente) setDatos({ clave, tablero, alertas, salud });
+      })
+      .catch((e) => {
+        if (vigente) {
+          setDatos({ clave, error: mensajeDeError(e, "No se pudieron cargar las métricas.") });
+        }
+      });
+
+    return () => { vigente = false; };
+  }, [clave, global, otroModulo, moduloPedido, ventana]);
+
+  if (cargando) return <div className="screen metrics"><div className="notice">Cargando métricas...</div></div>;
+  if (error) return <div className="screen metrics"><div className="notice error" role="alert">{error}</div></div>;
+  if (!tablero) return null;
+
+  const titulo = global ? "Métricas del Core" : `Métricas: ${tablero.module}`;
+
+  return (
+    <div className="screen metrics">
+      <div className="crumb">
+        Observatory / Telemetría / {global ? "Hub completo" : tablero.module}
       </div>
-      <div className="metrics-head-actions">
-        <span className="badge">PENDIENTE DE DEFINICIÓN DE CONTRATO (SPRINT 2)</span>
-        {scoped&&<Link className="metrics-global-link" to="/metrics">Ver métricas globales</Link>}
+
+      <header className="page-head">
+        <div>
+          <h1>{titulo}</h1>
+          <p>
+            Ventana de {tablero.windowHours} h · actualizado{" "}
+            {new Date(tablero.generatedAt).toLocaleString()}
+            {salud && (
+              <>
+                {" · broker "}
+                <strong className={salud.checks?.broker?.status === "up" ? "ok" : "ko"}>
+                  {salud.checks?.broker?.status === "up" ? "conectado" : "caído"}
+                </strong>
+              </>
+            )}
+          </p>
+        </div>
+        <div className="metrics-head-actions">
+          <div className="window-picker" role="group" aria-label="Ventana de tiempo">
+            {VENTANAS.map((v) => (
+              <button
+                key={v.horas}
+                type="button"
+                className={ventana === v.horas ? "selected" : ""}
+                onClick={() => setVentana(v.horas)}
+              >
+                {v.etiqueta}
+              </button>
+            ))}
+          </div>
+          {esAdmin && !global && <Link className="metrics-global-link" to="/metrics">Ver el hub completo</Link>}
+        </div>
+      </header>
+
+      {global ? <VistaGlobal tablero={tablero} /> : <VistaDeModulo tablero={tablero} />}
+
+      <section className="chart-panel">
+        <h2>Volumen por hora</h2>
+        <VolumenPorHora puntos={tablero.volumeByHour} />
+      </section>
+
+      {alertas.length > 0 && (
+        <section className="alerts-panel">
+          <h3 className="section-title">Alertas de integración ({alertas.length})</h3>
+          <ul className="alert-list">
+            {alertas.map((alerta, i) => (
+              <li className={`alert ${alerta.severity}`} key={`${alerta.kind}-${alerta.eventType}-${i}`}>
+                <span className="alert-kind">{alerta.kind}</span>
+                <code>{alerta.eventType}</code>
+                <p>{alerta.detail}</p>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+    </div>
+  );
+}
+
+function VistaDeModulo({ tablero }) {
+  const { published, received, deadLetters, subscriptions, publications, processing } = tablero;
+  return (
+    <>
+      <div className="kpi-grid">
+        <Kpi titulo="Publicados" valor={published.inWindow} detalle={`${published.total} desde siempre`} />
+        <Kpi
+          titulo="Recibidos"
+          valor={received.total}
+          detalle={`${received.delivered} entregados · ${received.pendingRetry} reintentando`}
+        />
+        <Kpi titulo="En dead letter" valor={deadLetters.open} detalle="Abiertos, esperando reproceso" />
+        <Kpi
+          titulo="Procesamiento"
+          valor={`${processing.avgMs} ms`}
+          detalle={`máximo ${processing.maxMs} ms`}
+        />
       </div>
-    </header>
-    {moduleId&&!module&&<div className="notice">El módulo solicitado no existe. Se muestran las métricas globales.</div>}
-    <section className="hero-panel"><div><span className="badge">PIPELINE DE PROMETHEUS & OPENTELEMETRY</span><h2>{scoped?`Telemetría de ${module.name}`:"Métricas y Telemetría en proceso de especificación"}</h2><p>{scoped?`Vista reservada para las métricas propias de ${module.name}. La fuente real se conectará cuando esté disponible el contrato de telemetría.`:"La visualización gráfica de rendimiento se encuentra reservada hasta completar el mapeo de contratos de ingesta."}</p><div className="notice">ⓘ <b>Ruta técnica reservada: /metrics{scoped?`?module=${module.id}`:""}</b><br/>La telemetría en tiempo real se activará automáticamente una vez formalizados los contratos.</div></div><div className="pipeline">{scoped?<><b>{module.code}</b> → OTEL PROCESSOR ··· CORE OBSERVATORY<br/><small>{module.events.length} tipos de evento configurados</small></>:<>KAFKA CLUSTER → <b>OTEL PROCESSOR</b> ··· CORE OBSERVATORY<br/><small>Contrato de telemetría pendiente de homologación</small></>}</div></section>
-    <h3 className="section-title">▣ {scoped?`Indicadores de ${module.name}`:"Indicadores y KPIs bajo relevamiento"}</h3>
-    <div className="kpi-grid">{kpis.map(([t,d])=><article className="kpi" key={t}><b>{t}</b><p>{d}</p><code>{scoped?module.code:"SPEC: Core.Bus.Metric"}</code></article>)}</div>
-    <section className="chart-panel"><h2>{scoped?`Telemetría del módulo ${module.name}`:"Maqueta de Interfaz Telemetría"}</h2><div className="chart-grid"><div className="fake-chart"><b>Tasa de Transferencia Egress/Ingress</b><div className="bars">▂ ▅ ▃ ▆ ▄ ▇ ▅ ▃ ▆</div></div><div className="fake-chart"><b>Latencia Media End-to-End</b><div className="linechart">╱╱╱╱╱╱╱</div></div><div className="fake-chart"><b>{scoped?"Tasa de Fallos":"Tasa de Fallos por Módulo"}</b>{scoped?<><p>{module.name} 0.12%</p><progress value="12" max="100"/><p>DLQ 0.03%</p><progress value="3" max="100"/></>:<><p>Auth Service 0.12%</p><progress value="12" max="100"/><p>Orders Service 0.85%</p><progress value="55" max="100"/></>}</div></div></section>
-  </div>;
+
+      <div className="chart-grid">
+        <Lista
+          titulo="Tipos que más publicó"
+          filas={published.topTypes}
+          clave="eventType"
+          valor="total"
+          vacio="No publicó nada en esta ventana."
+        />
+        <div className="fake-chart">
+          <b>Suscripciones activas ({subscriptions.active})</b>
+          {subscriptions.eventTypes.length ? (
+            <ul className="plain-list">
+              {subscriptions.eventTypes.map((tipo) => <li key={tipo}><span>{tipo}</span></li>)}
+            </ul>
+          ) : (
+            <p className="empty-note">Sin suscripciones. Elegí tipos en Eventos Suscriptos.</p>
+          )}
+        </div>
+        <div className="fake-chart">
+          <b>Tipos declarados para publicar ({publications.declared.length})</b>
+          {publications.declared.length ? (
+            <ul className="plain-list">
+              {publications.declared.map((tipo) => <li key={tipo}><span>{tipo}</span></li>)}
+            </ul>
+          ) : (
+            <p className="empty-note">No declaró ninguno.</p>
+          )}
+        </div>
+      </div>
+    </>
+  );
+}
+
+function VistaGlobal({ tablero }) {
+  const { events, deliveries, deadLetters, modules } = tablero;
+  return (
+    <>
+      <div className="kpi-grid">
+        <Kpi titulo="Eventos en la ventana" valor={events.total} detalle={`${events.lastHour} en la última hora`} />
+        <Kpi titulo="Por minuto" valor={events.perMinuteLastHour} detalle="Promedio de la última hora" />
+        <Kpi titulo="Dead letters abiertos" valor={deadLetters.open} detalle="A reprocesar o descartar" />
+        <Kpi
+          titulo="Procesamiento"
+          valor={`${events.processing.avgMs} ms`}
+          detalle={`máximo ${events.processing.maxMs} ms`}
+        />
+      </div>
+
+      <div className="chart-grid">
+        <Lista titulo="Tipos más frecuentes" filas={events.topTypes} clave="eventType" valor="total" vacio="Sin eventos." />
+        <Lista titulo="Quién publica más" filas={events.bySourceModule} clave="module" valor="total" vacio="Sin eventos." />
+        <div className="fake-chart">
+          <b>Entregas por estado</b>
+          <ul className="plain-list">
+            {Object.entries(deliveries.byStatus).map(([estado, total]) => (
+              <li key={estado}><span>{estado}</span><strong>{total}</strong></li>
+            ))}
+          </ul>
+        </div>
+      </div>
+
+      <h3 className="section-title">Módulos</h3>
+      <table className="module-table">
+        <thead>
+          <tr>
+            <th>Módulo</th><th>Equipo</th><th>Suscripciones</th>
+            <th>Último login</th><th>Última publicación</th>
+          </tr>
+        </thead>
+        <tbody>
+          {modules.map((m) => (
+            <tr key={m.name} className={m.active ? "" : "inactive"}>
+              <td>
+                <Link to={`/metrics?module=${encodeURIComponent(m.name)}`}>{m.displayName}</Link>
+                <code>{m.name}</code>
+              </td>
+              <td>{m.team ?? "—"}</td>
+              <td>{m.subscriptions}</td>
+              <td>{m.lastLoginAt ? new Date(m.lastLoginAt).toLocaleString() : "nunca"}</td>
+              <td>{m.lastPublishAt ? new Date(m.lastPublishAt).toLocaleString() : "nunca"}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </>
+  );
 }

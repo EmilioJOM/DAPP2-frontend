@@ -1,57 +1,114 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router";
-import {
-  getSubscriptionPreferences,
-  moduleCatalog,
-  saveSelectedModules,
-} from "../services/subscriptionPreferences";
+import { catalogoPorModulo } from "../services/catalog";
+import { listarSuscripciones } from "../services/subscriptions";
+import { guardarModulosVisibles, modulosVisibles } from "../services/subscriptionPreferences";
+import { mensajeDeError } from "../services/api";
+import { session } from "../services/session";
 
-export default function Suscripciones(){
-  const initial=getSubscriptionPreferences();
-  const [selected,setSelected]=useState(initial.moduleIds);
-  const [saved,setSaved]=useState(false);
+/**
+ * Elegir que modulos mirar. Es una preferencia local: no cambia a que esta
+ * suscripto el modulo, solo filtra lo que se muestra en la pantalla siguiente.
+ * Las suscripciones de verdad se eligen en Eventos Suscriptos.
+ */
+export default function Suscripciones() {
+  const [modulos, setModulos] = useState([]);
+  const [suscriptos, setSuscriptos] = useState(new Set());
+  const [elegidos, setElegidos] = useState(modulosVisibles());
+  const [cargando, setCargando] = useState(true);
+  const [error, setError] = useState("");
+  const [guardado, setGuardado] = useState(false);
 
-  const toggle=(moduleId)=>{
-    setSaved(false);
-    setSelected((current)=>current.includes(moduleId)
-      ? current.filter((id)=>id!==moduleId)
-      : [...current,moduleId]);
+  useEffect(() => {
+    (async () => {
+      try {
+        const [catalogo, subs] = await Promise.all([
+          catalogoPorModulo(),
+          listarSuscripciones(),
+        ]);
+        setModulos(catalogo);
+        setSuscriptos(new Set(subs.filter((s) => s.active).map((s) => s.eventType)));
+      } catch (e) {
+        setError(mensajeDeError(e, "No se pudo cargar el catálogo."));
+      } finally {
+        setCargando(false);
+      }
+    })();
+  }, []);
+
+  const alternar = (id) => {
+    setGuardado(false);
+    setElegidos((actual) =>
+      actual.includes(id) ? actual.filter((x) => x !== id) : [...actual, id],
+    );
   };
 
-  const apply=()=>{
-    const next=saveSelectedModules(selected);
-    setSelected(next.moduleIds);
-    setSaved(true);
+  const aplicar = () => {
+    setElegidos(guardarModulosVisibles(elegidos));
+    setGuardado(true);
   };
 
-  return <div className="screen subscriptions">
-    <div className="crumb">Observatory / Suscripciones / Selección de módulos</div>
-    <header className="page-head">
-      <div>
-        <h1>Suscripciones</h1>
-        <p>Seleccioná los módulos que querés observar. En Eventos Suscriptos vas a elegir qué eventos seguir dentro de estos módulos.</p>
+  if (cargando) return <div className="screen subscriptions"><div className="notice">Cargando catálogo...</div></div>;
+  if (error) return <div className="screen subscriptions"><div className="notice error" role="alert">{error}</div></div>;
+
+  return (
+    <div className="screen subscriptions">
+      <div className="crumb">Observatory / Suscripciones / Selección de módulos</div>
+      <header className="page-head">
+        <div>
+          <h1>Suscripciones</h1>
+          <p>
+            Elegí qué módulos querés mirar. En <Link to="/eventos-suscriptos">Eventos
+            Suscriptos</Link> seleccionás a qué eventos suscribirte de verdad.
+          </p>
+        </div>
+        <span className="badge">
+          {elegidos.length || modulos.length} de {modulos.length} módulos
+        </span>
+      </header>
+
+      <div className="subscription-selector-grid">
+        {modulos.map((modulo) => {
+          const activos = modulo.events.filter((e) => suscriptos.has(e.name)).length;
+          const marcado = elegidos.length === 0 || elegidos.includes(modulo.id);
+          return (
+            <article className={`module-choice ${marcado ? "selected" : ""}`} key={modulo.id}>
+              <label className="module-choice-main">
+                <input
+                  type="checkbox"
+                  checked={elegidos.includes(modulo.id)}
+                  onChange={() => alternar(modulo.id)}
+                />
+                <span>
+                  <strong>{modulo.displayName ?? modulo.name}</strong>
+                  <code>{modulo.name}</code>
+                  <small>
+                    {modulo.events.length} tipos de evento
+                    {activos > 0 && ` · ${activos} suscripto${activos > 1 ? "s" : ""}`}
+                  </small>
+                </span>
+              </label>
+              {session.esAdmin() && (
+                <Link className="module-metrics-link" to={`/metrics?module=${encodeURIComponent(modulo.name)}`}>
+                  Ver métricas →
+                </Link>
+              )}
+            </article>
+          );
+        })}
       </div>
-      <span className="badge">{selected.length} de {moduleCatalog.length} módulos seleccionados</span>
-    </header>
 
-    <div className="subscription-selector-grid">
-      {moduleCatalog.map((module)=><article className={`module-choice ${selected.includes(module.id)?"selected":""}`} key={module.id}>
-        <label className="module-choice-main">
-          <input type="checkbox" checked={selected.includes(module.id)} onChange={()=>toggle(module.id)}/>
-          <span>
-            <strong>{module.name}</strong>
-            <code>{module.code}</code>
-            <small>{module.events.length} tipos de evento disponibles</small>
-          </span>
-        </label>
-        <Link className="module-metrics-link" to={`/metrics?module=${encodeURIComponent(module.id)}`}>Ver métricas →</Link>
-      </article>)}
+      <div className="selection-actions">
+        <span className="selection-summary">
+          Sin ninguno marcado se muestran todos. Esto no da ni quita suscripciones.
+        </span>
+        <button className="primary" type="button" onClick={aplicar}>Aplicar</button>
+      </div>
+      {guardado && (
+        <p className="selection-status success" role="status">
+          Listo. Seguí en Eventos Suscriptos para elegir los eventos.
+        </p>
+      )}
     </div>
-
-    <div className="selection-actions">
-      <span className="selection-summary">Los eventos de un módulo deseleccionado también dejan de formar parte de la suscripción.</span>
-      <button className="primary" type="button" onClick={apply}>Aplicar módulos</button>
-    </div>
-    {saved&&<p className="selection-status success" role="status">Selección de módulos guardada. Continuá en Eventos Suscriptos para elegir los eventos.</p>}
-  </div>;
+  );
 }
