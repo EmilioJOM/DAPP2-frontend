@@ -103,13 +103,30 @@ pantallas con ellas. Para cambiar la paleta entera se tocan diez líneas.
 
 - **Esqueletos de carga** en vez de un cartel de "Cargando...": reservan el lugar
   exacto que van a ocupar los datos, así la pantalla no salta al llegar.
-- **Las alertas de integración se agrupan por severidad.** Son el cálculo más
-  valioso del Core, pero son 66: en una lista plana no se leen. Las que piden
-  acción van primero y abiertas; las informativas arrancan plegadas.
+- **Las alertas de integración se agrupan por tipo de agujero.** Son el cálculo
+  más valioso del Core, pero son decenas y todas las de un mismo tipo repiten la
+  misma frase. La explicación va una vez, en la cabecera del grupo, y cada
+  renglón trae solo lo que lo distingue: el tipo de evento y los dos números que
+  cambian. La severidad ordena y colorea —las que piden acción van primero y
+  abiertas— y cuando hay muchas, un filtro por tipo de evento abre los grupos
+  que coinciden. Un `kind` que el front todavía no conoce arma su propio grupo
+  con el código crudo de título y muestra el texto del Core tal como vino: el
+  Core va a seguir agregando tipos y ninguno puede romper la pantalla.
 - **Los dead letters se pintan de rojo cuando hay alguno.** Es el único número
   del tablero sobre el que se puede actuar; en cero es un dato más.
 - **El gráfico de volumen** etiqueta una hora de cada tres y anota el pico. Con
   las 24 puestas el eje se vuelve ruido y se deja de ver la forma.
+- **Las fechas van en relativo** (`hace 3 minutos`) con la fecha exacta en el
+  `title`. En una tabla de 25 renglones son todas del mismo rato: la fecha
+  completa repetida tapa lo único que cambia. En el historial, la columna de
+  recepción muestra la demora hasta el hub en vez de repetir la hora de al lado.
+- **Un vacío y un error no son lo mismo.** "No hay eventos todavía" manda a
+  revisar las suscripciones; "tu búsqueda no encontró nada" ofrece limpiarla; y
+  un fallo del Core muestra su mensaje con un botón de reintentar, sin perder el
+  título ni la navegación de la pantalla.
+- **Antes de aplicar suscripciones se dice qué va a pasar.** Cada tilde crea o
+  borra una cola en RabbitMQ, así que la barra de acción muestra cuántas altas y
+  cuántas bajas hay pendientes y se desactiva cuando no hay nada que aplicar.
 
 ## Cómo está armado
 
@@ -118,8 +135,10 @@ src/index.css   tokens: color, tipografía, radios, base del documento
 src/App.css     las pantallas, armadas sobre esos tokens
 src/services/   una capa por recurso del Core: api, auth, session,
                 catalog, subscriptions, events, metrics
-src/pages/      las cuatro pantallas
-src/components/ JsonModal y UserProfile
+src/pages/      las cuatro pantallas y el login
+src/components/ Esqueleto (cargando), Estados (vacío y error),
+                AlertasDeIntegracion, JsonModal y UserProfile
+src/utils/      tiempo: fechas relativas y demoras
 ```
 
 Ninguna pantalla llama a `axios` ni arma una URL: todo pasa por `src/services`.
