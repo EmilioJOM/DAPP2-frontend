@@ -3,115 +3,149 @@
    Los tokens y la base tipográfica viven en index.css.
    =========================================================================== */
 
-/* --- Barra superior ------------------------------------------------------ */
-/* Blanca y de pelo. La navegación de un panel es andamiaje: tiene que estar
-   disponible sin pelearle la atención a los datos. */
+/* --- El andamiaje: sidebar + contenido ----------------------------------- */
+/* Un panel de dashboard: la navegación vive en una barra vertical fija a la
+   izquierda y el contenido ocupa todo el ancho que queda. La barra es blanca
+   sobre el papel frío del fondo, separada por una línea y una sombra apenas. */
+:root { --sidebar: 248px; }
 
-.top-nav {
+.app-shell {
+  display: grid;
+  grid-template-columns: var(--sidebar) minmax(0, 1fr);
+  min-height: 100svh;
+}
+
+.sidebar {
   position: sticky;
   top: 0;
-  z-index: 20;
+  align-self: start;
+  height: 100svh;
   display: flex;
-  align-items: center;
-  gap: 40px;
-  padding: 0 32px;
-  height: 60px;
-  background: rgba(255, 255, 255, 0.82);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--linea);
+  flex-direction: column;
+  gap: 6px;
+  padding: 20px 14px;
+  background: var(--papel);
+  border-right: 1px solid var(--linea);
+  box-shadow: var(--sombra-sm);
+  z-index: 20;
 }
 
-.top-nav__brand {
+.sidebar__brand {
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: 10px;
+  padding: 8px 10px 18px;
   color: var(--tinta);
   font-size: 15px;
-  font-weight: 500;
+  font-weight: 600;
   letter-spacing: -0.02em;
-  white-space: nowrap;
 }
 
-.top-nav__brand strong { font-weight: 500; }
+.sidebar__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
 
-.top-nav__links {
+.sidebar__nav a {
   display: flex;
   align-items: center;
-  gap: 4px;
-  flex: 1;
-  min-width: 0;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-.top-nav__links::-webkit-scrollbar { display: none; }
-
-.top-nav__links a {
-  padding: 7px 13px;
-  border-radius: var(--radio-pildora);
-  color: var(--tinta-3);
-  font-size: 13.5px;
-  white-space: nowrap;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: var(--radio-ch);
+  color: var(--tinta-2);
+  font-size: 14px;
+  font-weight: 500;
   text-decoration: none;
   transition: color .15s, background-color .15s;
 }
-
-.top-nav__links a:hover { color: var(--tinta); background: var(--papel-3); text-decoration: none; }
-/* El activo se llena, no se tiñe: en un panel que se vive entre pestañas, saber
-   dónde estás parado de un vistazo vale el acento fuerte. Fondo azul sólido
-   (texto blanco a 5:1, cumple AA), no el gradiente, cuyo extremo claro no da
-   contraste con blanco. */
-.top-nav__links a.active {
+.sidebar__nav a:hover { color: var(--tinta); background: var(--papel-2); text-decoration: none; }
+/* El activo se llena con el azul de marca (texto blanco a 5:1, cumple AA): en un
+   panel que se vive entre secciones, saber dónde estás parado vale el acento. */
+.sidebar__nav a.active {
   color: #fff;
   background: var(--azul);
-  font-weight: 500;
-  box-shadow: 0 1px 2px hsl(var(--sombra-color) / .25);
+  box-shadow: 0 2px 6px hsl(var(--sombra-color) / .22);
 }
-.top-nav__links a.active:hover { color: #fff; background: var(--azul-hondo); }
+.sidebar__nav a.active:hover { color: #fff; background: var(--azul-hondo); }
 
-.top-nav__tools { display: flex; align-items: center; gap: 14px; }
+.nav-icono { width: 19px; height: 19px; flex: none; }
 
-.nav-module {
+/* El usuario, abajo de todo: avatar + nombre + rol, como botón al perfil. */
+.sidebar__user {
   display: flex;
-  align-items: baseline;
-  gap: 7px;
-  font-size: 13px;
-  color: var(--tinta-2);
-  white-space: nowrap;
-}
-
-.nav-admin {
-  padding: 2px 8px;
-  border-radius: var(--radio-pildora);
-  background: var(--celeste-tenue);
-  color: var(--azul);
-  font: 500 10px/1.6 var(--mono);
-  letter-spacing: .06em;
-  text-transform: uppercase;
-}
-
-.nav-user-button {
-  width: 32px;
-  height: 32px;
-  padding: 0;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  margin-top: 6px;
+  padding: 9px 10px;
   border: 1px solid var(--linea);
-  border-radius: 50%;
+  border-radius: var(--radio-ch);
   background: var(--papel);
-  color: var(--tinta-2);
-  font-size: 13px;
-  line-height: 1;
+  text-align: left;
   cursor: pointer;
   transition: border-color .15s, background-color .15s;
 }
-.nav-user-button:hover { border-color: var(--linea-fuerte); background: var(--papel-3); }
+.sidebar__user:hover { border-color: var(--linea-fuerte); background: var(--papel-2); }
+.sidebar__avatar {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--gradiente);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+}
+.sidebar__user-info { display: flex; flex-direction: column; min-width: 0; line-height: 1.3; }
+.sidebar__user-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--tinta);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sidebar__user-rol { font-size: 11.5px; color: var(--tinta-3); }
+
+/* En pantallas angostas la barra pasa a ser horizontal arriba: íconos arriba
+   del texto, scroll lateral, y el contenido debajo. */
+@media (max-width: 860px) {
+  .app-shell { grid-template-columns: 1fr; }
+  .sidebar {
+    height: auto;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    border-right: 0;
+    border-bottom: 1px solid var(--linea);
+  }
+  .sidebar__brand { padding: 0 6px 0 4px; }
+  .sidebar__brand strong { display: none; }
+  .sidebar__nav { flex-direction: row; overflow-x: auto; scrollbar-width: none; }
+  .sidebar__nav::-webkit-scrollbar { display: none; }
+  .sidebar__nav a { flex-direction: column; gap: 4px; padding: 7px 12px; font-size: 11.5px; white-space: nowrap; }
+  .sidebar__user { width: auto; margin-top: 0; }
+  .sidebar__user-info { display: none; }
+}
 
 /* --- El lienzo ----------------------------------------------------------- */
 
-.page-content { flex: 1; }
+.page-content { min-width: 0; }
 
+/* Con el sidebar, el contenido usa todo el ancho que queda, con un tope alto
+   para que las líneas largas de texto no se estiren de más en monitores anchos.
+   En pantallas comunes eso es, en la práctica, a todo el ancho. */
 .screen {
-  max-width: var(--ancho);
+  max-width: 1440px;
   margin: 0 auto;
-  padding: 44px 32px 96px;
+  padding: 40px 44px 96px;
 }
 
 .crumb {
@@ -269,7 +303,9 @@ input[type="checkbox"] {
   border-radius: var(--radio);
   background: var(--papel);
   box-shadow: var(--sombra-sm);
-  overflow: hidden;
+  /* La tabla scrollea adentro del panel cuando no entra, en vez de empujar la
+     página o cortarse contra el borde. Las esquinas redondeadas se conservan. */
+  overflow-x: auto;
 }
 
 .panel h3 {
@@ -886,14 +922,12 @@ tbody td:first-child { font-family: var(--mono); font-size: 12.5px; color: var(-
 
 @media (max-width: 1020px) {
   .kpi-grid, .chart-grid { grid-template-columns: repeat(2, 1fr); }
-  .screen { padding: 32px 20px 72px; }
-  .top-nav { gap: 20px; padding: 0 20px; }
+  .screen { padding: 32px 24px 72px; }
   .page-head { flex-direction: column; align-items: flex-start; }
 }
 
 @media (max-width: 680px) {
   .kpi-grid, .chart-grid { grid-template-columns: 1fr; }
-  .top-nav__brand, .nav-module { display: none; }
   .history-search input { min-width: 0; }
   .selection-actions { flex-direction: column; align-items: stretch; gap: 14px; }
   .panel { overflow-x: auto; }
