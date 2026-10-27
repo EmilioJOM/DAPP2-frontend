@@ -8,14 +8,30 @@ import {
   tableroGlobal,
 } from "../services/metrics";
 import { EsqueletoKpis, EsqueletoTabla } from "../components/Esqueleto";
+import { ErrorDeCarga } from "../components/Estados";
+import AlertasDeIntegracion from "../components/AlertasDeIntegracion";
 import { mensajeDeError } from "../services/api";
 import { session } from "../services/session";
+import { esFecha, fechaExacta, haceCuanto } from "../utils/tiempo";
 
 const VENTANAS = [
   { horas: 1, etiqueta: "1 h" },
   { horas: 24, etiqueta: "24 h" },
   { horas: 168, etiqueta: "7 días" },
 ];
+
+/**
+ * Los estados de entrega vienen del enum del Core. En la pantalla iban crudos
+ * —`RETRYING`, `DEAD`— y había que conocer el enum para leerlos. Uno que no
+ * esté acá se muestra tal cual, que es lo que pasaba con todos.
+ */
+const ESTADO_DE_ENTREGA = {
+  DELIVERED: "Entregadas",
+  PENDING: "En camino",
+  RETRYING: "Reintentando",
+  DEAD: "En dead letter",
+  DISCARDED: "Descartadas",
+};
 
 function Kpi({ titulo, valor, detalle, urgente = false }) {
   return (
@@ -24,6 +40,16 @@ function Kpi({ titulo, valor, detalle, urgente = false }) {
       <strong className="kpi-value">{valor}</strong>
       {detalle && <p>{detalle}</p>}
     </article>
+  );
+}
+
+/** Una marca de tiempo: se lee el relativo, el dato fino queda en el `title`. */
+function Cuando({ iso, nunca = "nunca" }) {
+  if (!esFecha(iso)) return <span className="dato-ausente">{nunca}</span>;
+  return (
+    <time dateTime={iso} title={fechaExacta(iso)}>
+      {haceCuanto(iso)}
+    </time>
   );
 }
 
@@ -64,7 +90,7 @@ function VolumenPorHora({ puntos }) {
                 style={{ height: `${(punto.rejected / maximo) * 100}%` }}
               />
             )}
-            <small>{i % cada === 0 ? String(hora.getHours()).padStart(2, "0") : "\u00a0"}</small>
+            <small>{i % cada === 0 ? String(hora.getHours()).padStart(2, "0") : " "}</small>
           </div>
         );
       })}
@@ -72,16 +98,54 @@ function VolumenPorHora({ puntos }) {
   );
 }
 
+/**
+ * Un ranking.
+ *
+ * Cada fila lleva una barrita proporcional al mayor del grupo. Una columna de
+ * números sueltos obliga a comparar de memoria: con la barra se ve de un
+ * vistazo si el primero duplica al segundo o si están todos parejos.
+ */
 function Lista({ titulo, filas, clave, valor, vacio }) {
+  const maximo = Math.max(...(filas ?? []).map((f) => Number(f[valor]) || 0), 1);
+
   return (
     <div className="fake-chart">
-      <b>{titulo}</b>
+      <b>
+        {titulo}
+        {filas?.length ? <span className="fake-chart-cuenta">{filas.length}</span> : null}
+      </b>
       {filas?.length ? (
-        <ul className="plain-list">
+        <ul className="plain-list plain-list--proporcional">
           {filas.map((fila) => (
-            <li key={fila[clave]}>
+            <li
+              key={fila[clave]}
+              style={{ "--proporcion": `${((Number(fila[valor]) || 0) / maximo) * 100}%` }}
+            >
               <span>{fila[clave]}</span>
               <strong>{fila[valor]}</strong>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="empty-note">{vacio}</p>
+      )}
+    </div>
+  );
+}
+
+/** Una lista de nombres sin número al lado: tipos suscriptos, tipos declarados. */
+function ListaDeTipos({ titulo, tipos = [], vacio }) {
+  return (
+    <div className="fake-chart">
+      <b>
+        {titulo}
+        <span className="fake-chart-cuenta">{tipos.length}</span>
+      </b>
+      {tipos.length ? (
+        <ul className="plain-list">
+          {tipos.map((tipo) => (
+            <li key={tipo}>
+              <span>{tipo}</span>
             </li>
           ))}
         </ul>
@@ -98,6 +162,9 @@ export default function Metricas() {
   const esAdmin = session.esAdmin();
 
   const [ventana, setVentana] = useState(24);
+  // Se incrementa al tocar "Reintentar": entra en la clave y vuelve a disparar
+  // el pedido sin recargar la pagina entera.
+  const [intento, setIntento] = useState(0);
 
   // Solo el admin puede mirar otro modulo: sin `?module=` ve el hub completo,
   // y con `?module=` el tablero de ese equipo. El resto siempre ve lo suyo.
@@ -107,7 +174,7 @@ export default function Metricas() {
   // `clave` es la consulta pedida y `datos.clave` la que ya respondio: mientras
   // no coinciden la pantalla esta cargando. Asi el indicador no depende de que
   // cada rama se acuerde de apagarlo.
-  const clave = `${global}|${moduloPedido ?? ""}|${ventana}`;
+  const clave = `${global}|${moduloPedido ?? ""}|${ventana}|${intento}`;
   const [datos, setDatos] = useState(null);
   const cargando = datos?.clave !== clave;
   const error = datos?.error ?? "";
@@ -142,20 +209,49 @@ export default function Metricas() {
     return () => { vigente = false; };
   }, [clave, global, otroModulo, moduloPedido, ventana]);
 
+  // El encabezado se arma una vez y se usa tambien mientras carga y cuando
+  // falla: una pantalla que pierde su titulo al fallar se lee como rota.
+  const dondeEstoy = global ? "Hub completo" : (moduloPedido ?? session.getModulo() ?? "");
+  const encabezado = (
+    <>
+      <div className="crumb">Observatory / Telemetría / {dondeEstoy}</div>
+      <header className="page-head">
+        <div>
+          <h1>{global ? "Métricas del Core" : `Métricas: ${dondeEstoy}`}</h1>
+        </div>
+      </header>
+    </>
+  );
+
   if (cargando) {
     return (
       <div className="screen metrics">
-        <div className="crumb">Observatory / Telemetría</div>
-        <header className="page-head"><div><h1>Métricas</h1></div></header>
+        {encabezado}
         <EsqueletoKpis />
         <EsqueletoTabla filas={4} columnas={5} />
       </div>
     );
   }
-  if (error) return <div className="screen metrics"><div className="notice error" role="alert">{error}</div></div>;
+
+  // El error ya no se come la pantalla: quedan el titulo y la navegacion, y hay
+  // un reintento a mano. En desarrollo el caso normal es que el Core todavia no
+  // arranco, y para eso volver a pedir alcanza.
+  if (error) {
+    return (
+      <div className="screen metrics">
+        {encabezado}
+        <ErrorDeCarga
+          titulo="No se pudieron cargar las métricas"
+          mensaje={error}
+          onReintentar={() => setIntento((i) => i + 1)}
+        />
+      </div>
+    );
+  }
   if (!tablero) return null;
 
   const titulo = global ? "Métricas del Core" : `Métricas: ${tablero.module}`;
+  const brokerArriba = salud?.checks?.broker?.status === "up";
 
   return (
     <div className="screen metrics">
@@ -172,8 +268,8 @@ export default function Metricas() {
             {salud && (
               <>
                 {" · broker "}
-                <strong className={salud.checks?.broker?.status === "up" ? "ok" : "ko"}>
-                  {salud.checks?.broker?.status === "up" ? "conectado" : "caído"}
+                <strong className={brokerArriba ? "ok" : "ko"}>
+                  {brokerArriba ? "conectado" : "caído"}
                 </strong>
               </>
             )}
@@ -186,6 +282,7 @@ export default function Metricas() {
                 key={v.horas}
                 type="button"
                 className={ventana === v.horas ? "selected" : ""}
+                aria-pressed={ventana === v.horas}
                 onClick={() => setVentana(v.horas)}
               >
                 {v.etiqueta}
@@ -203,7 +300,7 @@ export default function Metricas() {
         <VolumenPorHora puntos={tablero.volumeByHour} />
       </section>
 
-      {alertas.length > 0 && <Alertas alertas={alertas} />}
+      <AlertasDeIntegracion alertas={alertas} />
     </div>
   );
 }
@@ -219,7 +316,12 @@ function VistaDeModulo({ tablero }) {
           valor={received.total}
           detalle={`${received.delivered} entregados · ${received.pendingRetry} reintentando`}
         />
-        <Kpi titulo="En dead letter" valor={deadLetters.open} detalle="Abiertos, esperando reproceso" urgente={deadLetters.open > 0} />
+        <Kpi
+          titulo="En dead letter"
+          valor={deadLetters.open}
+          detalle={deadLetters.open > 0 ? "Abiertos, esperando reproceso" : "Nada pendiente de reproceso"}
+          urgente={deadLetters.open > 0}
+        />
         <Kpi
           titulo="Procesamiento"
           valor={`${processing.avgMs} ms`}
@@ -235,26 +337,16 @@ function VistaDeModulo({ tablero }) {
           valor="total"
           vacio="No publicó nada en esta ventana."
         />
-        <div className="fake-chart">
-          <b>Suscripciones activas ({subscriptions.active})</b>
-          {subscriptions.eventTypes.length ? (
-            <ul className="plain-list">
-              {subscriptions.eventTypes.map((tipo) => <li key={tipo}><span>{tipo}</span></li>)}
-            </ul>
-          ) : (
-            <p className="empty-note">Sin suscripciones. Elegí tipos en Eventos Suscriptos.</p>
-          )}
-        </div>
-        <div className="fake-chart">
-          <b>Tipos declarados para publicar ({publications.declared.length})</b>
-          {publications.declared.length ? (
-            <ul className="plain-list">
-              {publications.declared.map((tipo) => <li key={tipo}><span>{tipo}</span></li>)}
-            </ul>
-          ) : (
-            <p className="empty-note">No declaró ninguno.</p>
-          )}
-        </div>
+        <ListaDeTipos
+          titulo="Suscripciones activas"
+          tipos={subscriptions.eventTypes}
+          vacio="Sin suscripciones: no va a recibir nada. Elegí tipos en Eventos Suscriptos."
+        />
+        <ListaDeTipos
+          titulo="Tipos declarados para publicar"
+          tipos={publications.declared}
+          vacio="No declaró ninguno: los demás equipos no tienen cómo saber qué publica."
+        />
       </div>
     </>
   );
@@ -262,12 +354,21 @@ function VistaDeModulo({ tablero }) {
 
 function VistaGlobal({ tablero }) {
   const { events, deliveries, deadLetters, modules } = tablero;
+  const entregas = Object.entries(deliveries.byStatus ?? {});
+  const totalEntregas = entregas.reduce((n, [, total]) => n + total, 0);
+  const callados = modules.filter((m) => m.active && !m.lastPublishAt).length;
+
   return (
     <>
       <div className="kpi-grid">
         <Kpi titulo="Eventos en la ventana" valor={events.total} detalle={`${events.lastHour} en la última hora`} />
         <Kpi titulo="Por minuto" valor={events.perMinuteLastHour} detalle="Promedio de la última hora" />
-        <Kpi titulo="Dead letters abiertos" valor={deadLetters.open} detalle="A reprocesar o descartar" urgente={deadLetters.open > 0} />
+        <Kpi
+          titulo="Dead letters abiertos"
+          valor={deadLetters.open}
+          detalle={deadLetters.open > 0 ? "A reprocesar o descartar" : "Nada pendiente"}
+          urgente={deadLetters.open > 0}
+        />
         <Kpi
           titulo="Procesamiento"
           valor={`${events.processing.avgMs} ms`}
@@ -279,97 +380,70 @@ function VistaGlobal({ tablero }) {
         <Lista titulo="Tipos más frecuentes" filas={events.topTypes} clave="eventType" valor="total" vacio="Sin eventos." />
         <Lista titulo="Quién publica más" filas={events.bySourceModule} clave="module" valor="total" vacio="Sin eventos." />
         <div className="fake-chart">
-          <b>Entregas por estado</b>
-          <ul className="plain-list">
-            {Object.entries(deliveries.byStatus).map(([estado, total]) => (
-              <li key={estado}><span>{estado}</span><strong>{total}</strong></li>
-            ))}
-          </ul>
+          <b>
+            Entregas por estado
+            <span className="fake-chart-cuenta">{totalEntregas}</span>
+          </b>
+          {entregas.length ? (
+            <ul className="plain-list plain-list--proporcional">
+              {entregas.map(([estado, total]) => (
+                <li
+                  key={estado}
+                  style={{ "--proporcion": `${(total / Math.max(totalEntregas, 1)) * 100}%` }}
+                >
+                  {/* El enum crudo obligaba a conocer el enum. El codigo queda en
+                      el `title`, que es lo que se busca en los logs. */}
+                  <span title={estado}>{ESTADO_DE_ENTREGA[estado] ?? estado}</span>
+                  <strong>{total}</strong>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="empty-note">Todavía no se entregó nada.</p>
+          )}
         </div>
       </div>
 
       <h3 className="section-title">Módulos</h3>
-      <table className="module-table">
-        <thead>
-          <tr>
-            <th>Módulo</th><th>Equipo</th><th>Suscripciones</th>
-            <th>Último login</th><th>Última publicación</th>
-          </tr>
-        </thead>
-        <tbody>
-          {modules.map((m) => (
-            <tr key={m.name} className={m.active ? "" : "inactive"}>
-              <td>
-                <Link to={`/metrics?module=${encodeURIComponent(m.name)}`}>{m.displayName}</Link>
-                <code>{m.name}</code>
-              </td>
-              <td>{m.team ?? "—"}</td>
-              <td>{m.subscriptions}</td>
-              <td>{m.lastLoginAt ? new Date(m.lastLoginAt).toLocaleString() : "nunca"}</td>
-              <td>{m.lastPublishAt ? new Date(m.lastPublishAt).toLocaleString() : "nunca"}</td>
+      {/* El número solo no dice nada: lo que importa de esta tabla es cuántos
+          equipos activos todavía no mandaron un solo evento. */}
+      <p className="tabla-resumen">
+        {modules.length} módulos ·{" "}
+        {callados > 0 ? (
+          <strong className="dato-aviso">
+            {callados} {callados === 1 ? "activo que nunca publicó" : "activos que nunca publicaron"}
+          </strong>
+        ) : (
+          "todos los activos ya publicaron algo"
+        )}
+      </p>
+      <div className="tabla-scroll">
+        <table className="module-table">
+          <thead>
+            <tr>
+              <th scope="col">Módulo</th><th scope="col">Equipo</th><th scope="col">Suscripciones</th>
+              <th scope="col">Último login</th><th scope="col">Última publicación</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {modules.map((m) => (
+              <tr key={m.name}>
+                <td>
+                  <Link to={`/metrics?module=${encodeURIComponent(m.name)}`}>{m.displayName}</Link>
+                  {/* Antes la fila inactiva iba con `opacity: .45`, que deja el
+                      texto en 2:1 de contraste. Ahora lo dice una etiqueta. */}
+                  {!m.active && <span className="pill pill--apagada">inactivo</span>}
+                  <code>{m.name}</code>
+                </td>
+                <td>{m.team ?? <span className="dato-ausente">sin equipo</span>}</td>
+                <td>{m.subscriptions > 0 ? m.subscriptions : <span className="dato-aviso">ninguna</span>}</td>
+                <td><Cuando iso={m.lastLoginAt} /></td>
+                <td><Cuando iso={m.lastPublishAt} nunca="nunca publicó" /></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </>
-  );
-}
-
-/**
- * Las alertas de integracion, agrupadas por severidad.
- *
- * Son el calculo mas valioso del Core —los agujeros entre equipos que aparecen
- * solos cruzando quien publica que con quien consume que— pero hoy son 66. En
- * una lista plana no se leen. Las que piden accion van primero y abiertas; las
- * informativas arrancan plegadas.
- */
-function Alertas({ alertas }) {
-  const grupos = [
-    { clave: "warning", titulo: "Requieren atención", abiertoPorDefecto: true },
-    { clave: "info", titulo: "Informativas", abiertoPorDefecto: false },
-  ]
-    .map((g) => ({ ...g, items: alertas.filter((a) => a.severity === g.clave) }))
-    .filter((g) => g.items.length);
-
-  // Cualquier severidad que no sea warning/info igual tiene que verse.
-  const otras = alertas.filter((a) => !["warning", "info"].includes(a.severity));
-  if (otras.length) grupos.push({ clave: "info", titulo: "Otras", items: otras, abiertoPorDefecto: false });
-
-  return (
-    <section className="alerts-panel">
-      <h3 className="section-title">Alertas de integración ({alertas.length})</h3>
-      {grupos.map((grupo, i) => (
-        <GrupoDeAlertas key={`${grupo.titulo}-${i}`} {...grupo} />
-      ))}
-    </section>
-  );
-}
-
-function GrupoDeAlertas({ clave, titulo, items, abiertoPorDefecto }) {
-  const [abierto, setAbierto] = useState(abiertoPorDefecto);
-  return (
-    <div className={`alertas-grupo ${clave}`}>
-      <button
-        type="button"
-        className="alertas-cabecera"
-        aria-expanded={abierto}
-        onClick={() => setAbierto((a) => !a)}
-      >
-        <span className="flecha" aria-hidden="true">›</span>
-        {titulo}
-        <span className="cuenta">{items.length}</span>
-      </button>
-      {abierto && (
-        <ul className="alert-list">
-          {items.map((alerta, i) => (
-            <li className={`alert ${alerta.severity}`} key={`${alerta.kind}-${alerta.eventType}-${i}`}>
-              <span className="alert-kind">{alerta.kind}</span>
-              <code>{alerta.eventType}</code>
-              <p>{alerta.detail}</p>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
   );
 }

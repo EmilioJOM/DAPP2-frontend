@@ -168,6 +168,7 @@ button:disabled { opacity: .45; cursor: not-allowed; }
 }
 .primary:hover:not(:disabled) { background: var(--azul-hondo); border-color: var(--azul-hondo); }
 
+
 .apply { margin: 32px auto 0; display: block; min-width: 180px; }
 
 input[type="text"], input[type="email"], input[type="password"], input:not([type]) {
@@ -204,7 +205,43 @@ input[type="checkbox"] {
 .ok { color: var(--ok); }
 .ko { color: var(--error); }
 
-/* Vacíos: en vez de una tabla con cero filas, decir qué falta y adónde ir. */
+/* Vacíos y errores: en vez de una tabla con cero filas o un cartel rojo suelto,
+   decir qué pasó, por qué, y qué se puede hacer al respecto. */
+.estado-vacio {
+  max-width: 48ch;
+  margin: 64px auto;
+  text-align: center;
+}
+.estado-vacio h2 { margin-bottom: 10px; }
+.estado-vacio p { font-size: 14px; }
+.estado-vacio code { font-size: 13px; }
+.estado-vacio-accion { display: inline-block; margin-top: 22px; }
+
+/* El error lleva su propia caja: tiene que distinguirse de un vacío normal sin
+   gritar, porque en desarrollo se ve todo el tiempo. */
+.estado-vacio--error {
+  max-width: 52ch;
+  padding: 34px 32px 30px;
+  border: 1px solid #e8d5ce;
+  border-radius: var(--radio);
+  background: var(--error-tenue);
+}
+.estado-vacio--error h2 { color: var(--error); }
+.estado-vacio-icono {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  margin: 0 auto 14px;
+  border-radius: 50%;
+  background: var(--papel);
+  color: var(--error);
+  font: 500 17px/1 var(--sans);
+}
+/* El mensaje que mandó el Core, textual. Es el dato, no el adorno. */
+.estado-vacio-detalle { color: var(--tinta); font-weight: 500; }
+.estado-vacio-pista { margin-top: 8px; font-size: 13px; color: var(--tinta-2); }
+
 .empty-selection {
   max-width: 44ch;
   margin: 72px auto;
@@ -221,6 +258,16 @@ input[type="checkbox"] {
   color: #fff;
 }
 .empty-selection-link:hover { text-decoration: none; background: var(--azul-hondo); color: #fff; }
+
+/* Un <Link> que tiene que verse como el botón primario. */
+.boton-enlace {
+  display: inline-block;
+  padding: 9px 20px;
+  border-radius: var(--radio-pildora);
+  background: var(--azul);
+  color: #fff;
+}
+.boton-enlace:hover { text-decoration: none; background: var(--azul-hondo); color: #fff; }
 
 /* --- Tablas -------------------------------------------------------------- */
 /* Sin rayado ni bordes verticales. Una línea de pelo por fila alcanza para
@@ -493,31 +540,13 @@ tbody td:first-child { font-family: var(--mono); font-size: 12.5px; color: var(-
   white-space: nowrap;
 }
 
-/* --- Alertas de integración ---------------------------------------------- */
-
-.alerts-panel { margin-top: 48px; }
-.alert-list { margin: 0; padding: 0; list-style: none; display: grid; gap: 1px; background: var(--linea); border: 1px solid var(--linea); border-radius: var(--radio); overflow: hidden; }
-
-.alert {
-  display: grid;
-  grid-template-columns: 170px 240px 1fr;
-  gap: 18px;
-  align-items: baseline;
-  padding: 15px 22px;
-  background: var(--papel);
-  font-size: 13px;
-}
-.alert-kind { font: 400 10.5px/1.4 var(--mono); letter-spacing: .06em; color: var(--tinta-3); }
-.alert.warning .alert-kind { color: var(--aviso); }
-.alert code { font-size: 12.5px; }
-.alert p { color: var(--tinta-2); }
 
 /* --- Tabla de módulos ---------------------------------------------------- */
 
+.tabla-scroll { overflow-x: auto; }
 .module-table { border: 1px solid var(--linea); border-radius: var(--radio); overflow: hidden; background: var(--papel); }
 .module-table td code { display: block; margin-top: 3px; font-size: 11px; color: var(--tinta-3); }
 .module-table td:first-child { font-family: var(--sans); font-size: 13px; }
-.module-table tr.inactive { opacity: .45; }
 
 /* --- Suscripciones ------------------------------------------------------- */
 
@@ -799,7 +828,6 @@ tbody td:first-child { font-family: var(--mono); font-size: 12.5px; color: var(-
 
 @media (max-width: 1020px) {
   .kpi-grid, .chart-grid { grid-template-columns: repeat(2, 1fr); }
-  .alert { grid-template-columns: 1fr; gap: 5px; }
   .screen { padding: 32px 20px 72px; }
   .top-nav { gap: 20px; padding: 0 20px; }
   .page-head { flex-direction: column; align-items: flex-start; }
@@ -840,44 +868,134 @@ tbody td:first-child { font-family: var(--mono); font-size: 12.5px; color: var(-
 .esqueleto-fila .esqueleto { flex: 1; }
 .esqueleto-kpi { padding: 24px 26px; background: var(--papel); display: grid; gap: 14px; }
 
-/* --- Alertas de integración: jerarquía ------------------------------------ */
-/* Con 66 alertas una lista plana no se lee. Se agrupan por severidad, las que
-   requieren acción primero, y el grupo informativo arranca plegado. */
+/* --- Alertas de integración ----------------------------------------------- */
+/* Eran cuarenta y siete renglones casi idénticos: cada uno repetía la misma
+   frase de dos líneas y lo único que cambiaba —el nombre del evento y un par de
+   números— quedaba perdido adentro del párrafo. Ahora la explicación va una vez
+   por grupo y el renglón es el dato: nombre del evento a la izquierda, lo que
+   lo distingue a la derecha. Veinte renglones iguales en estructura se barren
+   de un vistazo; veinte párrafos iguales hay que leerlos. */
 
-.alertas-grupo { margin-bottom: 20px; }
+.alerts-panel { margin-top: 48px; }
+
+.alertas-encabezado {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+.alertas-encabezado .section-title { margin-bottom: 4px; }
+.alertas-resumen { font-size: 13px; color: var(--tinta-2); }
+.alertas-resumen strong { color: var(--tinta); font-weight: 500; }
+.alertas-urgentes { color: var(--aviso); }
+
+.alertas-filtro { min-width: 240px; margin-bottom: 4px; }
+.alertas-coincidencias { margin: 14px 0 -4px; font-size: 12.5px; color: var(--tinta-3); }
+
+.alertas-sin-nada {
+  padding: 22px 24px;
+  border: 1px solid var(--linea);
+  border-radius: var(--radio);
+  background: var(--papel);
+  font-size: 13.5px;
+  color: var(--tinta-2);
+}
+.alertas-sin-nada strong { color: var(--ok); font-weight: 500; }
+
+.alertas-grupo { margin-top: 16px; }
 
 .alertas-cabecera {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 11px;
   width: 100%;
-  padding: 12px 18px;
+  padding: 13px 18px;
   border: 1px solid var(--linea);
   border-radius: var(--radio);
   background: var(--papel);
   text-align: left;
-  font-size: 13px;
+  font-size: 14px;
   color: var(--tinta);
 }
 .alertas-cabecera:hover { background: var(--papel-2); }
 .alertas-cabecera[aria-expanded="true"] { border-radius: var(--radio) var(--radio) 0 0; border-bottom: 0; }
+
+.alertas-titulo { display: flex; align-items: baseline; gap: 10px; min-width: 0; flex-wrap: wrap; }
+.alertas-titulo code { font-size: 12.5px; }
+
+/* El corte de severidad: una vez, arriba de los grupos que la comparten. La
+   severidad ordena y colorea; el título de cada grupo dice qué hay que hacer. */
+.alertas-corte {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 26px 0 10px;
+  font: 500 11px/1.4 var(--sans);
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: var(--tinta-3);
+}
+.alertas-corte::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--linea);
+}
+.alertas-corte.warning { color: var(--aviso); }
+
 .alertas-cabecera .cuenta {
   margin-left: auto;
+  flex: none;
   padding: 2px 10px;
   border-radius: var(--radio-pildora);
+  background: var(--papel-3);
+  color: var(--tinta-2);
   font: 500 11px/1.6 var(--mono);
 }
 .alertas-grupo.warning .cuenta { background: var(--aviso-tenue); color: var(--aviso); }
 .alertas-grupo.info .cuenta { background: var(--celeste-tenue); color: var(--azul); }
-.alertas-cabecera .flecha { color: var(--tinta-3); transition: transform .15s; }
+.alertas-cabecera .flecha { flex: none; color: var(--tinta-3); transition: transform .15s; }
 .alertas-cabecera[aria-expanded="true"] .flecha { transform: rotate(90deg); }
 
-.alertas-grupo .alert-list { border-radius: 0 0 var(--radio) var(--radio); }
+.alertas-cuerpo {
+  border: 1px solid var(--linea);
+  border-top: 0;
+  border-radius: 0 0 var(--radio) var(--radio);
+  background: var(--papel);
+  overflow: hidden;
+}
 
-/* Un punto de severidad al principio de cada alerta: se barre la lista sin leer. */
-.alert { border-left: 3px solid transparent; }
-.alert.warning { border-left-color: var(--aviso); }
-.alert.info { border-left-color: var(--celeste); }
+/* La frase que antes iba repetida en cada renglón. */
+.alertas-significa {
+  padding: 15px 20px 16px;
+  border-bottom: 1px solid var(--linea);
+  max-width: 88ch;
+  font-size: 13px;
+  color: var(--tinta-2);
+}
+
+.alert-list { margin: 0; padding: 0; list-style: none; }
+
+.alerta {
+  display: grid;
+  grid-template-columns: minmax(0, 300px) 1fr;
+  gap: 20px;
+  align-items: baseline;
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--linea);
+  border-left: 3px solid transparent;
+  font-size: 13px;
+}
+.alerta:last-child { border-bottom: 0; }
+.alertas-grupo.warning .alerta { border-left-color: var(--aviso); }
+.alertas-grupo.info .alerta { border-left-color: var(--celeste); }
+
+.alerta-tipo { font-size: 12.5px; color: var(--tinta); overflow-wrap: anywhere; }
+.alerta-dato { color: var(--tinta-2); }
+/* Cuando el resumen no se pudo armar cae el texto crudo del Core: se nota que
+   es otra cosa, y así se ve enseguida qué `kind` quedó sin traducir. */
+.alerta-dato--crudo { font-size: 12.5px; color: var(--tinta-3); }
 
 /* --- Profundidad ---------------------------------------------------------- */
 /* Un lavado celeste detrás de la barra superior. Es lo único decorativo de todo
@@ -902,4 +1020,68 @@ tbody td:first-child { font-family: var(--mono); font-size: 12.5px; color: var(-
   overflow: hidden;
   clip-path: inset(50%);
   white-space: nowrap;
+}
+
+
+/* --- Datos con contexto --------------------------------------------------- */
+/* Un número suelto no dice si está bien o mal, y un guión tampoco dice por qué
+   falta. Estas tres clases son todo lo que hace falta para decirlo. */
+
+/* No hay dato, y eso es normal. */
+.dato-ausente { color: var(--tinta-3); font-style: normal; }
+/* Hay dato y es el que no querías: cero suscripciones, nadie que publique. */
+.dato-aviso { color: var(--aviso); font-weight: 500; }
+
+.pill {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 1px 8px;
+  border-radius: var(--radio-pildora);
+  font: 400 10.5px/1.6 var(--sans);
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  vertical-align: 1px;
+}
+.pill--apagada { background: var(--papel-3); color: var(--tinta-3); }
+
+/* El resumen que va arriba de una tabla, diciendo qué hay que mirar de ella. */
+.tabla-resumen { margin: -4px 0 14px; font-size: 13px; color: var(--tinta-2); }
+.tabla-resumen strong { font-weight: 500; }
+
+/* --- Listas con proporción ------------------------------------------------ */
+/* Una columna de números sueltos obliga a comparar de memoria. La barrita dice
+   en qué proporción está cada fila contra la mayor del grupo. */
+
+.fake-chart b { display: flex; align-items: baseline; gap: 9px; }
+.fake-chart-cuenta {
+  padding: 1px 8px;
+  border-radius: var(--radio-pildora);
+  background: var(--papel-3);
+  color: var(--tinta-2);
+  font: 500 10.5px/1.6 var(--mono);
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.plain-list--proporcional li { position: relative; }
+.plain-list--proporcional li::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  height: 2px;
+  width: var(--proporcion, 0%);
+  background: var(--celeste);
+  border-radius: 2px;
+}
+
+/* --- Angosto: las alertas ------------------------------------------------- */
+/* Van al final del archivo a propósito: las reglas de arriba se definen más
+   abajo que el bloque de media queries general, así que acá es donde ganan. */
+
+@media (max-width: 1020px) {
+  .alerta { grid-template-columns: 1fr; gap: 3px; padding: 11px 18px; }
+  .alertas-encabezado { align-items: stretch; }
+  .alertas-filtro { min-width: 0; }
+  .alertas-significa { padding: 13px 18px 14px; }
 }

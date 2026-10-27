@@ -18,7 +18,7 @@
   /* --- Tinta ------------------------------------------------------------ */
   --tinta: #0d1b2a;        /* titulos y datos. 17.4:1 sobre blanco */
   --tinta-2: #4c637a;      /* texto corrido.    6.2:1 */
-  --tinta-3: #59718b;      /* etiquetas y placeholders. 4.8:1 sobre papel-2 */
+  --tinta-3: #556c86;      /* etiquetas y placeholders. 5.4:1 sobre papel */
 
   /* --- Papel ------------------------------------------------------------ */
   --papel: #fff;           /* tarjetas, tablas, modales */
@@ -41,7 +41,7 @@
   /* Apagados a proposito: en una tabla de 25 filas el rojo saturado grita y
      deja de significar algo. Estos se leen sin romper la calma. */
   --ok: #367263;      --ok-tenue: #eaf4f0;
-  --aviso: #94671e;   --aviso-tenue: #fbf3e4;
+  --aviso: #8c6019;   --aviso-tenue: #fbf3e4;
   --error: #b5342c;   --error-tenue: #fbeceb;
 
   --sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
