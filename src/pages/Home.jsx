@@ -204,8 +204,8 @@ function FilaDeEvento({ evento, onVerJson }) {
       <td title={esFecha(evento.receivedAt) ? `Recibido ${fechaExacta(evento.receivedAt)}` : undefined}>
         {tardanza ?? <span className="dato-ausente">—</span>}
       </td>
-      <td className={`estado estado--${estado.tono}`}>
-        {estado.texto}
+      <td className="estado-celda">
+        <span className={`estado estado--${estado.tono}`}>{estado.texto}</span>
         {evento.rejectionCode && <small className="estado-motivo">{evento.rejectionCode}</small>}
       </td>
       <td className={`entregas entregas--${tonoEntrega}`}>
