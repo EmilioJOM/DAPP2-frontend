@@ -56,7 +56,17 @@
 }
 
 .top-nav__links a:hover { color: var(--tinta); background: var(--papel-3); text-decoration: none; }
-.top-nav__links a.active { color: var(--azul); background: var(--celeste-tenue); font-weight: 500; }
+/* El activo se llena, no se tiñe: en un panel que se vive entre pestañas, saber
+   dónde estás parado de un vistazo vale el acento fuerte. Fondo azul sólido
+   (texto blanco a 5:1, cumple AA), no el gradiente, cuyo extremo claro no da
+   contraste con blanco. */
+.top-nav__links a.active {
+  color: #fff;
+  background: var(--azul);
+  font-weight: 500;
+  box-shadow: 0 1px 2px hsl(var(--sombra-color) / .25);
+}
+.top-nav__links a.active:hover { color: #fff; background: var(--azul-hondo); }
 
 .top-nav__tools { display: flex; align-items: center; gap: 14px; }
 
@@ -280,11 +290,11 @@ input[type="checkbox"] {
 table { width: 100%; border-collapse: collapse; }
 
 th {
-  padding: 12px 22px;
-  border-bottom: 1px solid var(--linea);
-  background: var(--papel);
+  padding: 13px 22px;
+  border-bottom: 1px solid var(--linea-fuerte);
+  background: var(--papel-2);
   text-align: left;
-  font: 500 11px/1.4 var(--sans);
+  font: 600 11px/1.4 var(--sans);
   letter-spacing: .06em;
   text-transform: uppercase;
   color: var(--tinta-3);
@@ -307,23 +317,32 @@ tbody tr:hover { background: var(--papel-2); }
    Va en mono y en tinta plena para que la vista la enganche al barrer. */
 tbody td:first-child { font-family: var(--mono); font-size: 12.5px; color: var(--tinta); }
 
-/* El punto de color va como ::before y no como flex: un `display:flex` sobre un
-   <td> lo saca del layout de la tabla y descuadra toda la columna. */
-.estado { font-size: 12.5px; white-space: nowrap; }
+/* El estado es una pastilla con fondo teñido y un punto del color del tono: se
+   lee de un vistazo y de lejos, que es como se barre una tabla. La pastilla va
+   en un <span> inline-flex; el <td> no lleva flex porque eso lo sacaria del
+   layout de la tabla y descuadraria la columna. */
+.estado-celda { white-space: nowrap; }
+.estado {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 3px 10px 3px 9px;
+  border-radius: var(--radio-pildora);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.5;
+}
 .estado::before {
   content: "";
-  display: inline-block;
   width: 6px;
   height: 6px;
-  margin-right: 8px;
   border-radius: 50%;
   background: currentColor;
-  vertical-align: 1px;
 }
-.estado--ok { color: var(--ok); }
-.estado--warn { color: var(--aviso); }
-.estado--error { color: var(--error); }
-.estado--muted { color: var(--tinta-3); }
+.estado--ok { color: var(--ok); background: var(--ok-tenue); }
+.estado--warn { color: var(--aviso); background: var(--aviso-tenue); }
+.estado--error { color: var(--error); background: var(--error-tenue); }
+.estado--muted { color: var(--tinta-3); background: var(--papel-3); }
 
 .json-btn {
   padding: 4px 11px;
@@ -331,7 +350,7 @@ tbody td:first-child { font-family: var(--mono); font-size: 12.5px; color: var(-
   font: 400 11.5px/1.5 var(--mono);
   color: var(--tinta-3);
 }
-.json-btn:hover { color: var(--tinta); }
+.json-btn:hover { color: var(--azul); border-color: var(--celeste-borde); background: var(--celeste-tenue); }
 
 .pager {
   display: flex;
@@ -886,7 +905,8 @@ tbody td:first-child { font-family: var(--mono); font-size: 12.5px; color: var(-
   width: 18px;
   height: 18px;
   border-radius: 5px;
-  background: var(--celeste);
+  background: var(--gradiente);
+  box-shadow: 0 1px 3px hsl(var(--sombra-color) / .25);
   flex: none;
 }
 
