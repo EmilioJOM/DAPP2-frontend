@@ -258,6 +258,7 @@ input[type="checkbox"] {
   border: 1px solid var(--linea);
   border-radius: var(--radio);
   background: var(--papel);
+  box-shadow: var(--sombra-sm);
   overflow: hidden;
 }
 
@@ -354,33 +355,51 @@ tbody td:first-child { font-family: var(--mono); font-size: 12.5px; color: var(-
 .kpi-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 1px;
-  background: var(--linea);
-  border: 1px solid var(--linea);
-  border-radius: var(--radio);
-  overflow: hidden;
+  gap: 16px;
 }
 
-.kpi { padding: 24px 26px; background: var(--papel); }
+/* Cada KPI es una tarjeta que flota, con una cinta de marca arriba: el número
+   es el protagonista de la pantalla y tiene que leerse como tal, no como una
+   celda más de una grilla plana. */
+.kpi {
+  position: relative;
+  padding: 22px 24px 24px;
+  background: var(--papel);
+  border: 1px solid var(--linea);
+  border-radius: var(--radio);
+  box-shadow: var(--sombra-sm);
+  overflow: hidden;
+  transition: box-shadow .18s, transform .18s;
+}
+.kpi::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  background: var(--gradiente);
+}
+.kpi:hover { box-shadow: var(--sombra); transform: translateY(-1px); }
 /* Los dead letters son el único número del tablero sobre el que se puede
    actuar. En cero es un dato más; arriba de cero tiene que saltar. */
 .kpi.urgente { background: var(--error-tenue); }
+.kpi.urgente::before { background: var(--error); }
 .kpi.urgente b, .kpi.urgente .kpi-value, .kpi.urgente p { color: var(--error); }
 .kpi b {
   font-size: 11px;
-  font-weight: 500;
+  font-weight: 600;
   letter-spacing: .07em;
   text-transform: uppercase;
   color: var(--tinta-3);
 }
 .kpi-value {
   display: block;
-  margin: 12px 0 6px;
-  font-size: 34px;
-  font-weight: 300;
-  letter-spacing: -0.035em;
+  margin: 14px 0 6px;
+  font-size: 46px;
+  font-weight: 600;
+  letter-spacing: -0.04em;
   line-height: 1;
   color: var(--tinta);
+  font-variant-numeric: tabular-nums;
 }
 .kpi p { font-size: 12.5px; color: var(--tinta-3); }
 
@@ -411,6 +430,7 @@ tbody td:first-child { font-family: var(--mono); font-size: 12.5px; color: var(-
   border: 1px solid var(--linea);
   border-radius: var(--radio);
   background: var(--papel);
+  box-shadow: var(--sombra-sm);
 }
 .chart-panel h2 {
   margin-bottom: 20px;
@@ -433,6 +453,7 @@ tbody td:first-child { font-family: var(--mono); font-size: 12.5px; color: var(-
   border: 1px solid var(--linea);
   border-radius: var(--radio);
   background: var(--papel);
+  box-shadow: var(--sombra-sm);
   min-height: 170px;
 }
 .fake-chart b {
@@ -525,7 +546,7 @@ tbody td:first-child { font-family: var(--mono); font-size: 12.5px; color: var(-
 /* --- Tabla de módulos ---------------------------------------------------- */
 
 .tabla-scroll { overflow-x: auto; }
-.module-table { border: 1px solid var(--linea); border-radius: var(--radio); overflow: hidden; background: var(--papel); }
+.module-table { border: 1px solid var(--linea); border-radius: var(--radio); overflow: hidden; background: var(--papel); box-shadow: var(--sombra-sm); }
 .module-table td code { display: block; margin-top: 3px; font-size: 11px; color: var(--tinta-3); }
 .module-table td:first-child { font-family: var(--sans); font-size: 13px; }
 
@@ -578,11 +599,13 @@ tbody td:first-child { font-family: var(--mono); font-size: 12.5px; color: var(-
 .selection-status.success { background: var(--ok-tenue); color: var(--ok); }
 .selection-status.error { background: var(--error-tenue); color: var(--error); }
 
-/* Catálogo de eventos: una tarjeta por módulo, una fila por tipo. */
+/* Catálogo de eventos: una tarjeta por módulo. Cada tipo dejó de ser una fila
+   con una casilla —el formulario de siempre— y pasó a ser un toggle que se
+   llena cuando está suscripto: se ve de un vistazo qué está activo. */
 .module-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 18px;
   align-items: start;
 }
 
@@ -590,13 +613,16 @@ tbody td:first-child { font-family: var(--mono); font-size: 12.5px; color: var(-
   border: 1px solid var(--linea);
   border-radius: var(--radio);
   background: var(--papel);
+  box-shadow: var(--sombra-sm);
   overflow: hidden;
+  transition: box-shadow .18s;
 }
+.module-card:hover { box-shadow: var(--sombra); }
 .module-card h3 {
   margin: 0;
   padding: 16px 18px 4px;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
 }
 .module-card-code {
   padding: 0 18px 14px;
@@ -604,20 +630,51 @@ tbody td:first-child { font-family: var(--mono); font-size: 12.5px; color: var(-
   font: 400 11.5px/1.4 var(--mono);
   color: var(--tinta-3);
 }
+/* La fila-toggle. Ocultamos la casilla nativa y usamos una marca propia que se
+   rellena con el gradiente de marca al activarse; con :has, toda la pastilla
+   se tiñe. Sin tocar el JSX: sigue siendo un <label><input><span>. */
 .module-card label {
   display: grid;
-  grid-template-columns: 18px 1fr;
+  grid-template-columns: 20px 1fr;
   gap: 12px;
-  align-items: baseline;
-  padding: 10px 18px;
-  border-bottom: 1px solid var(--linea);
-  font: 400 12.5px/1.5 var(--mono);
-  color: var(--tinta);
+  align-items: center;
+  margin: 6px 10px;
+  padding: 9px 12px;
+  border-radius: var(--radio-ch);
+  font: 400 12.5px/1.4 var(--mono);
+  color: var(--tinta-2);
   cursor: pointer;
-  transition: background-color .12s;
+  border: 1px solid transparent;
+  transition: background-color .14s, border-color .14s, color .14s;
 }
-.module-card label:last-child { border-bottom: 0; }
 .module-card label:hover { background: var(--papel-2); }
+.module-card label input { position: absolute; opacity: 0; width: 0; height: 0; }
+.module-card label > span { display: flex; align-items: center; gap: 2px; min-width: 0; }
+/* La marca del toggle: una cajita que al activarse se llena con el gradiente de
+   marca y lleva el tilde (un SVG inline) montado encima. */
+.module-card label::before {
+  content: "";
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  border: 1.5px solid var(--linea-fuerte);
+  background: var(--papel);
+  transition: background .14s, border-color .14s, box-shadow .14s;
+}
+.module-card label:has(:checked) {
+  background: var(--celeste-tenue);
+  border-color: var(--celeste-borde);
+  color: var(--tinta);
+}
+.module-card label:has(:checked)::before {
+  border-color: transparent;
+  background:
+    no-repeat center / 12px
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E"),
+    var(--gradiente);
+  box-shadow: inset 0 0 0 1px hsl(var(--sombra-color) / .1);
+}
+.module-card label:focus-within { outline: 2px solid var(--azul); outline-offset: 1px; }
 .module-card label small { font-family: var(--sans); font-size: 11px; color: var(--tinta-3); }
 
 .subscribed-head { align-items: flex-start; }
@@ -1085,17 +1142,31 @@ tbody td:first-child { font-family: var(--mono); font-size: 12.5px; color: var(-
   text-transform: none;
 }
 
-.plain-list--proporcional li { position: relative; }
+/* El ranking se lee como un gráfico de barras, no como una lista con una
+   rayita: cada fila tiene una barra de fondo con el gradiente de marca,
+   proporcional al mayor, y el texto va encima. */
+.plain-list--proporcional li {
+  position: relative;
+  border-bottom: 0;
+  padding: 10px 12px;
+  margin-bottom: 4px;
+  border-radius: var(--radio-ch);
+  overflow: hidden;
+  isolation: isolate;
+}
 .plain-list--proporcional li::after {
   content: "";
   position: absolute;
-  left: 0;
-  bottom: -1px;
-  height: 2px;
+  inset: 0;
+  z-index: -1;
   width: var(--proporcion, 0%);
-  background: var(--celeste);
-  border-radius: 2px;
+  min-width: 3px;
+  background: var(--gradiente);
+  opacity: .14;
+  border-radius: var(--radio-ch);
 }
+.plain-list--proporcional li span { font-weight: 500; color: var(--tinta); }
+.plain-list--proporcional strong { color: var(--tinta); font-weight: 600; }
 
 /* --- Catálogo de eventos: filtro y barra de aplicar ----------------------- */
 
