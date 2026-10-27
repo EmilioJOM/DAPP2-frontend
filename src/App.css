@@ -169,8 +169,6 @@ button:disabled { opacity: .45; cursor: not-allowed; }
 .primary:hover:not(:disabled) { background: var(--azul-hondo); border-color: var(--azul-hondo); }
 
 
-.apply { margin: 32px auto 0; display: block; min-width: 180px; }
-
 input[type="text"], input[type="email"], input[type="password"], input:not([type]) {
   padding: 9px 14px;
   border: 1px solid var(--linea-fuerte);
@@ -241,23 +239,6 @@ input[type="checkbox"] {
 /* El mensaje que mandó el Core, textual. Es el dato, no el adorno. */
 .estado-vacio-detalle { color: var(--tinta); font-weight: 500; }
 .estado-vacio-pista { margin-top: 8px; font-size: 13px; color: var(--tinta-2); }
-
-.empty-selection {
-  max-width: 44ch;
-  margin: 72px auto;
-  text-align: center;
-}
-.empty-selection h2 { margin-bottom: 10px; }
-.empty-selection p { font-size: 14px; }
-.empty-selection-link {
-  display: inline-block;
-  margin-top: 22px;
-  padding: 9px 20px;
-  border-radius: var(--radio-pildora);
-  background: var(--azul);
-  color: #fff;
-}
-.empty-selection-link:hover { text-decoration: none; background: var(--azul-hondo); color: #fff; }
 
 /* Un <Link> que tiene que verse como el botón primario. */
 .boton-enlace {
@@ -595,6 +576,7 @@ tbody td:first-child { font-family: var(--mono); font-size: 12.5px; color: var(-
   max-width: 560px;
 }
 .selection-status.success { background: var(--ok-tenue); color: var(--ok); }
+.selection-status.error { background: var(--error-tenue); color: var(--error); }
 
 /* Catálogo de eventos: una tarjeta por módulo, una fila por tipo. */
 .module-grid {
@@ -1048,6 +1030,46 @@ tbody td:first-child { font-family: var(--mono); font-size: 12.5px; color: var(-
 .tabla-resumen { margin: -4px 0 14px; font-size: 13px; color: var(--tinta-2); }
 .tabla-resumen strong { font-weight: 500; }
 
+/* --- Historial: búsqueda y columnas --------------------------------------- */
+
+/* Una búsqueda activa tiene que verse. Sin esto, una tabla filtrada y un hub
+   sin tráfico se ven igual. */
+.busqueda-activa {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+  padding: 9px 16px;
+  border: 1px solid var(--celeste-borde);
+  border-radius: var(--radio-pildora);
+  background: var(--celeste-tenue);
+  width: fit-content;
+  font-size: 13px;
+  color: var(--tinta-2);
+}
+.busqueda-activa strong { color: var(--tinta); font-weight: 500; font-family: var(--mono); }
+.chip-quitar {
+  padding: 2px 10px;
+  border-color: var(--celeste-borde);
+  background: var(--papel);
+  font-size: 12px;
+  color: var(--tinta-2);
+}
+
+/* El motivo del rechazo estaba en la columna de entregas, donde no explicaba
+   nada. Va pegado al estado, que es lo que explica. */
+.estado-motivo {
+  display: block;
+  margin-top: 2px;
+  font: 400 11px/1.4 var(--mono);
+  color: var(--tinta-3);
+}
+
+/* "1/3" en gris no dice si está bien. Completo es neutro, incompleto avisa. */
+.entregas { font-variant-numeric: tabular-nums; }
+.entregas--ok { color: var(--tinta-2); }
+.entregas--warn { color: var(--aviso); font-weight: 500; }
+
 /* --- Listas con proporción ------------------------------------------------ */
 /* Una columna de números sueltos obliga a comparar de memoria. La barrita dice
    en qué proporción está cada fila contra la mayor del grupo. */
@@ -1073,6 +1095,58 @@ tbody td:first-child { font-family: var(--mono); font-size: 12.5px; color: var(-
   width: var(--proporcion, 0%);
   background: var(--celeste);
   border-radius: 2px;
+}
+
+/* --- Catálogo de eventos: filtro y barra de aplicar ----------------------- */
+
+.catalogo-controles {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+.catalogo-controles input { min-width: 280px; }
+.catalogo-coincidencias { font-size: 12.5px; color: var(--tinta-3); }
+
+.module-card h3 { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.module-card-cuenta {
+  flex: none;
+  padding: 1px 9px;
+  border-radius: var(--radio-pildora);
+  background: var(--papel-3);
+  color: var(--tinta-3);
+  font: 500 11px/1.6 var(--mono);
+}
+.module-card-cuenta.activa { background: var(--celeste-tenue); color: var(--azul); }
+
+/* El botón estaba suelto al final de nueve tarjetas y había que ir a buscarlo.
+   Ahora queda a la vista mientras se recorre la grilla, y dice qué va a pasar
+   antes de tocarlo: cada tilde crea o borra una cola en RabbitMQ. */
+.barra-aplicar {
+  position: sticky;
+  bottom: 16px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-top: 28px;
+  padding: 14px 20px;
+  border: 1px solid var(--linea-fuerte);
+  border-radius: var(--radio-pildora);
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(10px);
+}
+.barra-aplicar-resumen { font-size: 13px; color: var(--tinta-3); }
+.barra-aplicar-resumen strong { font-weight: 500; }
+.cambio-alta { color: var(--ok); }
+.cambio-baja { color: var(--aviso); }
+
+@media (max-width: 680px) {
+  .barra-aplicar { flex-direction: column; align-items: stretch; gap: 12px; text-align: center; }
+  .catalogo-controles { flex-direction: column; align-items: stretch; }
+  .catalogo-controles input { min-width: 0; }
+  .busqueda-activa { width: auto; }
 }
 
 /* --- Angosto: las alertas ------------------------------------------------- */
