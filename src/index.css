@@ -47,9 +47,28 @@
   --sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 
-  --radio: 10px;
+  --radio: 14px;
+  --radio-ch: 10px;          /* radio mas chico, para pildoras y controles */
   --radio-pildora: 999px;
   --ancho: 1180px;        /* el renglon mas largo que se puede leer comodo */
+
+  /* --- Elevacion --------------------------------------------------------
+     El panel dejo de apoyarse solo en lineas de pelo: las tarjetas flotan con
+     una sombra teñida de azul marino, suave y en capas. Es lo que separa un
+     tablero que respira de una grilla plana. El color de la sombra sale de la
+     tinta, no es gris, para que pertenezca a la paleta. */
+  --sombra-color: 210 40% 22%;
+  --sombra-sm: 0 1px 2px hsl(var(--sombra-color) / .06),
+               0 1px 3px hsl(var(--sombra-color) / .05);
+  --sombra: 0 1px 2px hsl(var(--sombra-color) / .04),
+            0 4px 12px hsl(var(--sombra-color) / .07),
+            0 2px 6px hsl(var(--sombra-color) / .05);
+  --sombra-alta: 0 2px 4px hsl(var(--sombra-color) / .05),
+                 0 12px 32px hsl(var(--sombra-color) / .12),
+                 0 6px 14px hsl(var(--sombra-color) / .08);
+  /* El gradiente de marca: para lo que tiene que impactar —marcas activas,
+     barras, acentos de cabecera—. */
+  --gradiente: linear-gradient(135deg, var(--azul) 0%, var(--celeste) 100%);
 
   font: 400 15px/1.6 var(--sans);
   color: var(--tinta-2);
