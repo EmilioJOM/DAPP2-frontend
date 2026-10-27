@@ -1,5 +1,5 @@
 import { expect, jest, test, beforeEach, describe } from '@jest/globals'
-import { render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { listarEventos } from '../services/events'
 import Home from './Home'
 
@@ -92,5 +92,45 @@ describe('Historial de eventos', () => {
     await waitFor(() =>
       expect(screen.getByRole('alert')).toHaveTextContent(/no se pudo cargar el historial/i),
     )
+  })
+
+  test('una búsqueda sin resultados no se confunde con un hub sin eventos', async () => {
+    listarEventos.mockResolvedValue({ items: [], total: 0, pages: 0 })
+
+    pantalla()
+
+    // Sin búsqueda: no hay tráfico todavía.
+    expect(
+      await screen.findByRole('heading', { name: /todavía no hay eventos/i }),
+    ).toBeInTheDocument()
+
+    fireEvent.change(screen.getByLabelText(/buscar eventos/i), {
+      target: { value: 'noExiste' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: /^buscar$/i }))
+
+    // Con búsqueda: lo que falta es un resultado, no un evento.
+    expect(
+      await screen.findByRole('heading', { name: /ningún evento coincide con «noExiste»/i }),
+    ).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: /todavía no hay eventos/i })).not.toBeInTheDocument()
+  })
+
+  test('cuando el Core no responde ofrece reintentar sin recargar la página', async () => {
+    listarEventos.mockRejectedValueOnce(new Error('network')).mockResolvedValue({
+      items: [],
+      total: 0,
+      pages: 0,
+    })
+
+    pantalla()
+
+    await waitFor(() => expect(screen.getByRole('alert')).toBeInTheDocument())
+    fireEvent.click(screen.getByRole('button', { name: /reintentar/i }))
+
+    expect(
+      await screen.findByRole('heading', { name: /todavía no hay eventos/i }),
+    ).toBeInTheDocument()
+    expect(listarEventos).toHaveBeenCalledTimes(2)
   })
 })
