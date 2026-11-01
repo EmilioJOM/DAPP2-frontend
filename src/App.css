@@ -409,7 +409,9 @@ tbody td:first-child { font-family: var(--mono); font-size: 12.5px; color: var(-
 
 .kpi-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  /* Se acomoda a la cantidad de indicadores: el del modulo tiene cinco desde que
+     se agrego la tasa de errores (HU-08). */
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
   gap: 16px;
 }
 
@@ -918,6 +920,48 @@ tbody td:first-child { font-family: var(--mono); font-size: 12.5px; color: var(-
   border-top: 1px solid var(--linea);
 }
 
+/* --- Filtros del historial (HU-06) --------------------------------------- */
+
+.history-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+  margin: 0 0 16px;
+}
+.history-filters label { display: flex; flex-direction: column; gap: 4px; font-size: .85rem; color: var(--tinta-2); }
+.history-filters input:not([type]) { min-width: 300px; font-family: var(--mono); }
+.history-filters input[type="date"], .history-filters select {
+  padding: 8px 12px;
+  border: 1px solid var(--linea-fuerte);
+  border-radius: var(--radio-pildora);
+  background: var(--papel);
+}
+
+/* --- Cola de fallas (HU-07) ---------------------------------------------- */
+
+.dlq table th, .dlq table td { padding: 12px 14px; }
+.acciones-dlq { display: flex; flex-wrap: wrap; gap: 6px; }
+.acciones-dlq button { padding: 6px 12px; white-space: nowrap; }
+.dlq-detalle { margin-top: 20px; padding: 20px 24px; }
+.dlq-detalle h3 { margin: 20px 0 8px; }
+.dlq-detalle-cabecera { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.dlq-detalle-cabecera h2 { margin: 0; font-size: 1.1rem; }
+.dlq-detalle > .primary { margin-top: 16px; }
+.dlq-json {
+  max-height: 260px;
+  overflow: auto;
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--linea);
+  border-radius: var(--radio-ch);
+  background: var(--papel-2);
+  font-family: var(--mono);
+  font-size: .82rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
 /* --- Angosto ------------------------------------------------------------- */
 
 @media (max-width: 1020px) {
@@ -929,6 +973,9 @@ tbody td:first-child { font-family: var(--mono); font-size: 12.5px; color: var(-
 @media (max-width: 680px) {
   .kpi-grid, .chart-grid { grid-template-columns: 1fr; }
   .history-search input { min-width: 0; }
+  .history-filters { flex-direction: column; align-items: stretch; }
+  .history-filters input:not([type]) { min-width: 0; }
+  .acciones-dlq { flex-direction: column; }
   .selection-actions { flex-direction: column; align-items: stretch; gap: 14px; }
   .panel { overflow-x: auto; }
   .profile-facts div { grid-template-columns: 1fr; gap: 2px; }

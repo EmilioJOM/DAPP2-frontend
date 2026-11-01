@@ -1,7 +1,8 @@
 import { expect, jest, test, beforeEach, describe } from '@jest/globals'
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { listarEventos } from '../services/events'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { listarEventos, obtenerEvento } from '../services/events'
 import Home from './Home'
+import { limiteDelDia, validarFiltros } from '../utils/filtros'
 
 // react-router se publica solo como ESM y usa `import.meta`, que babel-jest no
 // puede transformar a CommonJS. Acá se prueba la pantalla, no el ruteo: alcanza
@@ -59,7 +60,8 @@ describe('Historial de eventos', () => {
     pantalla()
 
     expect(await screen.findByText('paymentConfirmed')).toBeInTheDocument()
-    expect(screen.getByText(/Entregado/)).toBeInTheDocument()
+    // "Entregado" también es una opción del filtro de estado: se busca en la tabla.
+    expect(within(screen.getByRole('table')).getByText(/Entregado/)).toBeInTheDocument()
     expect(screen.getByText('2/2')).toBeInTheDocument()
   })
 
@@ -114,6 +116,102 @@ describe('Historial de eventos', () => {
       await screen.findByRole('heading', { name: /ningún evento coincide con «noExiste»/i }),
     ).toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: /todavía no hay eventos/i })).not.toBeInTheDocument()
+  })
+
+  test('filtra por eventId pidiendo ese evento exacto (HU-06)', async () => {
+    listarEventos.mockResolvedValue({ items: [], total: 0, pages: 0 })
+    obtenerEvento.mockResolvedValue({
+      id: '9',
+      eventId: '3f2b6c1e-8a1d-4c55-9b0e-2a7f5d3c9e10',
+      eventType: 'ticketCreated',
+      sourceModule: 'rentas',
+      status: 'ROUTED',
+      deliveryCount: 1,
+      deliveredCount: 1,
+    })
+
+    pantalla()
+    await screen.findByRole('heading', { name: /todavía no hay eventos/i })
+    fireEvent.change(screen.getByLabelText(/identificador/i), {
+      target: { value: '3f2b6c1e-8a1d-4c55-9b0e-2a7f5d3c9e10' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: /aplicar filtros/i }))
+
+    expect(await screen.findByText('ticketCreated')).toBeInTheDocument()
+    expect(obtenerEvento).toHaveBeenCalledWith('3f2b6c1e-8a1d-4c55-9b0e-2a7f5d3c9e10')
+  })
+
+  test('un eventId inexistente se informa como "sin coincidencias", no como error', async () => {
+    listarEventos.mockResolvedValue({ items: [], total: 0, pages: 0 })
+    obtenerEvento.mockRejectedValue({ response: { status: 404 } })
+
+    pantalla()
+    await screen.findByRole('heading', { name: /todavía no hay eventos/i })
+    fireEvent.change(screen.getByLabelText(/identificador/i), {
+      target: { value: '00000000-0000-4000-8000-000000000000' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: /aplicar filtros/i }))
+
+    expect(await screen.findByRole('heading', { name: /ningún evento coincide con eventId/i })).toBeInTheDocument()
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  })
+
+  test('un eventId mal formado no dispara el pedido', async () => {
+    listarEventos.mockResolvedValue({ items: [], total: 0, pages: 0 })
+
+    pantalla()
+    await screen.findByRole('heading', { name: /todavía no hay eventos/i })
+    fireEvent.change(screen.getByLabelText(/identificador/i), { target: { value: '123' } })
+    fireEvent.click(screen.getByRole('button', { name: /aplicar filtros/i }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(/uuid/i)
+    expect(obtenerEvento).not.toHaveBeenCalled()
+  })
+
+  test('filtra por estado y rango de fechas con la API (HU-06)', async () => {
+    listarEventos.mockResolvedValue({ items: [], total: 0, pages: 0 })
+
+    pantalla()
+    await screen.findByRole('heading', { name: /todavía no hay eventos/i })
+    fireEvent.change(screen.getByLabelText(/estado/i), { target: { value: 'REJECTED' } })
+    fireEvent.change(screen.getByLabelText(/desde/i), { target: { value: '2026-11-01' } })
+    fireEvent.change(screen.getByLabelText(/hasta/i), { target: { value: '2026-11-02' } })
+    fireEvent.click(screen.getByRole('button', { name: /aplicar filtros/i }))
+
+    await waitFor(() =>
+      expect(listarEventos).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          status: 'REJECTED',
+          since: limiteDelDia('2026-11-01'),
+          until: limiteDelDia('2026-11-02', true),
+        }),
+      ),
+    )
+    expect(
+      (await screen.findAllByText(/estado Rechazado · desde 2026-11-01 · hasta 2026-11-02/)).length,
+    ).toBeGreaterThan(0)
+  })
+
+  test('un rango invertido se avisa y no se aplica', async () => {
+    listarEventos.mockResolvedValue({ items: [], total: 0, pages: 0 })
+
+    pantalla()
+    await screen.findByRole('heading', { name: /todavía no hay eventos/i })
+    fireEvent.change(screen.getByLabelText(/desde/i), { target: { value: '2026-11-05' } })
+    fireEvent.change(screen.getByLabelText(/hasta/i), { target: { value: '2026-11-01' } })
+    fireEvent.click(screen.getByRole('button', { name: /aplicar filtros/i }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(/posterior/i)
+    expect(listarEventos).toHaveBeenCalledTimes(1)
+  })
+
+  test('las fechas cubren el día completo en la hora local', () => {
+    const inicio = new Date(limiteDelDia('2026-11-01'))
+    const fin = new Date(limiteDelDia('2026-11-01', true))
+    expect([inicio.getHours(), inicio.getMinutes()]).toEqual([0, 0])
+    expect([fin.getHours(), fin.getMinutes(), fin.getSeconds()]).toEqual([23, 59, 59])
+    expect(limiteDelDia('')).toBeUndefined()
+    expect(validarFiltros({ eventId: '', desde: '', hasta: '' })).toBe('')
   })
 
   test('cuando el Core no responde ofrece reintentar sin recargar la página', async () => {

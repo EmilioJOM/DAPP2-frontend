@@ -13,6 +13,24 @@ import AlertasDeIntegracion from "../components/AlertasDeIntegracion";
 import { mensajeDeError } from "../services/api";
 import { session } from "../services/session";
 import { esFecha, fechaExacta, haceCuanto } from "../utils/tiempo";
+import { tasaDeErrores } from "../utils/metricas";
+
+/** HU-08: la tasa de errores de la ventana, al lado de la cola de fallas. */
+function KpiTasaDeErrores({ volumen }) {
+  const tasa = tasaDeErrores(volumen);
+  return (
+    <Kpi
+      titulo="Tasa de errores"
+      valor={tasa.texto}
+      detalle={
+        tasa.porcentaje === null
+          ? "Sin eventos en la ventana"
+          : `${tasa.rechazados} rechazados de ${tasa.total} eventos`
+      }
+      urgente={tasa.rechazados > 0}
+    />
+  );
+}
 
 const VENTANAS = [
   { horas: 1, etiqueta: "1 h" },
@@ -316,6 +334,7 @@ function VistaDeModulo({ tablero }) {
           valor={received.total}
           detalle={`${received.delivered} entregados · ${received.pendingRetry} reintentando`}
         />
+        <KpiTasaDeErrores volumen={tablero.volumeByHour} />
         <Kpi
           titulo="En dead letter"
           valor={deadLetters.open}
@@ -363,6 +382,7 @@ function VistaGlobal({ tablero }) {
       <div className="kpi-grid">
         <Kpi titulo="Eventos en la ventana" valor={events.total} detalle={`${events.lastHour} en la última hora`} />
         <Kpi titulo="Por minuto" valor={events.perMinuteLastHour} detalle="Promedio de la última hora" />
+        <KpiTasaDeErrores volumen={tablero.volumeByHour} />
         <Kpi
           titulo="Dead letters abiertos"
           valor={deadLetters.open}
