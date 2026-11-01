@@ -7,6 +7,7 @@ import { estadoDeEvento, listarEventos, obtenerEvento } from "../services/events
 import { mensajeDeError } from "../services/api";
 import { session } from "../services/session";
 import { demora, esFecha, fechaExacta, haceCuanto } from "../utils/tiempo";
+import { SIN_FILTROS, describirFiltros, hayFiltros, limiteDelDia, validarFiltros } from "../utils/filtros";
 
 const TAMANIO = 25;
 
@@ -14,6 +15,11 @@ export default function Home() {
   const [pagina, setPagina] = useState(1);
   const [filtro, setFiltro] = useState("");
   const [busqueda, setBusqueda] = useState("");
+  // Lo que se esta escribiendo y lo que ya se aplico van separados: la tabla
+  // cambia al tocar "Aplicar", no con cada tecla.
+  const [borrador, setBorrador] = useState(SIN_FILTROS);
+  const [filtros, setFiltros] = useState(SIN_FILTROS);
+  const [problema, setProblema] = useState("");
   const [json, setJson] = useState(null);
   // Se incrementa al tocar "Reintentar" y vuelve a disparar el pedido.
   const [intento, setIntento] = useState(0);
@@ -21,17 +27,35 @@ export default function Home() {
   // `clave` identifica la consulta pedida; `datos.clave`, la que ya respondio.
   // Mientras no coinciden la pantalla esta cargando, asi que no hace falta un
   // estado aparte que haya que acordarse de apagar en cada rama.
-  const clave = `${pagina}|${busqueda}|${intento}`;
+  const clave = `${pagina}|${busqueda}|${JSON.stringify(filtros)}|${intento}`;
   const [datos, setDatos] = useState(null);
   const cargando = datos?.clave !== clave;
   const error = datos?.error ?? "";
   const eventos = datos?.items ?? [];
   const total = datos?.total ?? 0;
   const paginas = datos?.paginas ?? 0;
+  const filtrando = Boolean(busqueda) || hayFiltros(filtros);
 
   useEffect(() => {
     let vigente = true;
-    listarEventos({ page: pagina, size: TAMANIO, query: busqueda || undefined })
+    // Un eventId es unico: se pide ese evento y no hace falta paginar.
+    const pedido = filtros.eventId
+      ? obtenerEvento(filtros.eventId).then(
+          (evento) => ({ items: [evento], total: 1, pages: 1 }),
+          (e) => {
+            if (e?.response?.status === 404) return { items: [], total: 0, pages: 0 };
+            throw e;
+          },
+        )
+      : listarEventos({
+          page: pagina,
+          size: TAMANIO,
+          query: busqueda || undefined,
+          status: filtros.estado || undefined,
+          since: limiteDelDia(filtros.desde),
+          until: limiteDelDia(filtros.hasta, true),
+        });
+    pedido
       .then((data) => {
         if (!vigente) return;
         setDatos({
@@ -46,7 +70,7 @@ export default function Home() {
         setDatos({ clave, items: [], error: mensajeDeError(e, "No se pudo cargar el historial.") });
       });
     return () => { vigente = false; };
-  }, [clave, pagina, busqueda, intento]);
+  }, [clave, pagina, busqueda, filtros, intento]);
 
   const buscar = (e) => {
     e.preventDefault();
@@ -54,11 +78,26 @@ export default function Home() {
     setBusqueda(filtro.trim());
   };
 
+  const aplicarFiltros = (e) => {
+    e.preventDefault();
+    const limpio = { ...borrador, eventId: borrador.eventId.trim() };
+    const motivo = validarFiltros(limpio);
+    setProblema(motivo);
+    if (motivo) return;
+    setPagina(1);
+    setFiltros(limpio);
+  };
+
   const limpiarBusqueda = () => {
     setFiltro("");
     setBusqueda("");
+    setBorrador(SIN_FILTROS);
+    setFiltros(SIN_FILTROS);
+    setProblema("");
     setPagina(1);
   };
+
+  const cambiar = (campo) => (e) => setBorrador((b) => ({ ...b, [campo]: e.target.value }));
 
   const verJson = async (evento) => {
     // El listado viene liviano a proposito; el sobre completo se pide al abrir.
@@ -95,13 +134,50 @@ export default function Home() {
         </form>
       </header>
 
-      {/* Una busqueda activa tiene que verse: si no, una tabla filtrada y una
+      <form className="history-filters" onSubmit={aplicarFiltros} aria-label="Filtros del historial">
+        <label>
+          <span>Identificador (eventId)</span>
+          <input
+            value={borrador.eventId}
+            onChange={cambiar("eventId")}
+            placeholder="UUID del evento"
+            spellCheck={false}
+          />
+        </label>
+        <label>
+          <span>Desde</span>
+          <input type="date" value={borrador.desde} onChange={cambiar("desde")} />
+        </label>
+        <label>
+          <span>Hasta</span>
+          <input type="date" value={borrador.hasta} onChange={cambiar("hasta")} />
+        </label>
+        <label>
+          <span>Estado</span>
+          <select value={borrador.estado} onChange={cambiar("estado")}>
+            <option value="">Todos</option>
+            {Object.entries(estadoDeEvento).map(([valor, { texto }]) => (
+              <option key={valor} value={valor}>
+                {texto}
+              </option>
+            ))}
+          </select>
+        </label>
+        <button type="submit">Aplicar filtros</button>
+      </form>
+      {problema && (
+        <p className="auth-status error" role="alert">
+          {problema}
+        </p>
+      )}
+
+      {/* Un filtro activo tiene que verse: si no, una tabla filtrada y una
           tabla vacia se parecen demasiado y uno cree que no hay eventos. */}
-      {busqueda && (
+      {filtrando && (
         <p className="busqueda-activa">
-          Filtrando por <strong>«{busqueda}»</strong>
+          Filtrando por <strong>{describirFiltros(busqueda, filtros)}</strong>
           <button type="button" className="chip-quitar" onClick={limpiarBusqueda}>
-            Quitar filtro
+            Quitar filtros
           </button>
         </p>
       )}
@@ -118,21 +194,22 @@ export default function Home() {
 
       {/* Dos vacios distintos. Antes los dos decian "todavia no hay eventos",
           asi que una busqueda sin resultados se leia como un hub sin trafico. */}
-      {!cargando && !error && eventos.length === 0 && busqueda && (
+      {!cargando && !error && eventos.length === 0 && filtrando && (
         <SinDatos
-          titulo={`Ningún evento coincide con «${busqueda}»`}
+          titulo={`Ningún evento coincide con ${describirFiltros(busqueda, filtros)}`}
           accion={
             <button type="button" onClick={limpiarBusqueda}>
               Ver todos los eventos
             </button>
           }
         >
-          Se busca por tipo de evento y por módulo de origen. Probá con una parte
-          del nombre: el hub usa inglés camelCase, como <code>ticketCreated</code>.
+          La búsqueda de texto mira el tipo de evento y el módulo de origen: probá
+          con una parte del nombre, como <code>ticketCreated</code>. Las fechas se
+          comparan con el momento en que el evento llegó al hub.
         </SinDatos>
       )}
 
-      {!cargando && !error && eventos.length === 0 && !busqueda && (
+      {!cargando && !error && eventos.length === 0 && !filtrando && (
         <SinDatos titulo="Todavía no hay eventos">
           Cuando tu módulo publique o reciba su primer evento, va a aparecer acá.
           Revisá en <Link to="/suscripciones">Suscripciones</Link> que estés
