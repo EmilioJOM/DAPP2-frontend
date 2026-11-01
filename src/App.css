@@ -128,7 +128,12 @@
   }
   .sidebar__brand { padding: 0 6px 0 4px; }
   .sidebar__brand strong { display: none; }
-  .sidebar__nav { flex-direction: row; overflow-x: auto; scrollbar-width: none; }
+  /* min-width: 0 deja que la barra se achique por debajo de su contenido y
+     active el scroll lateral; sin eso empujaba el ancho de toda la página
+     (a 360 px se dibujaba a ~680 px). */
+  .app-shell { grid-template-columns: minmax(0, 1fr); }
+  .sidebar { min-width: 0; }
+  .sidebar__nav { flex-direction: row; overflow-x: auto; scrollbar-width: none; flex: 1 1 auto; min-width: 0; }
   .sidebar__nav::-webkit-scrollbar { display: none; }
   .sidebar__nav a { flex-direction: column; gap: 4px; padding: 7px 12px; font-size: 11.5px; white-space: nowrap; }
   .sidebar__user { width: auto; margin-top: 0; }
@@ -976,6 +981,9 @@ tbody td:first-child { font-family: var(--mono); font-size: 12.5px; color: var(-
   .history-filters { flex-direction: column; align-items: stretch; }
   .history-filters input:not([type]) { min-width: 0; }
   .acciones-dlq { flex-direction: column; }
+  /* Los cuatro estados de la cola de fallas no entran a 360 px: scroll lateral. */
+  .window-picker { max-width: 100%; overflow-x: auto; scrollbar-width: none; }
+  .window-picker button { flex: none; }
   .selection-actions { flex-direction: column; align-items: stretch; gap: 14px; }
   .panel { overflow-x: auto; }
   .profile-facts div { grid-template-columns: 1fr; gap: 2px; }

@@ -138,14 +138,16 @@ function App() {
           className="sidebar__user"
           type="button"
           onClick={() => setProfileOpen(true)}
-          aria-label="Ver datos del usuario"
           title={sesion.actor}
         >
-          <span className="sidebar__avatar">{inicial(sesion.actor)}</span>
+          {/* Sin aria-label: el nombre accesible tiene que incluir el texto que se
+              ve (WCAG 2.5.3), asi quien usa control por voz puede nombrarlo. */}
+          <span className="sidebar__avatar" aria-hidden="true">{inicial(sesion.actor)}</span>
           <span className="sidebar__user-info">
             <span className="sidebar__user-name">{sesion.displayName}</span>
             <span className="sidebar__user-rol">{sesion.isAdmin ? "Administrador" : "Módulo"}</span>
           </span>
+          <span className="visually-hidden">, ver datos del usuario</span>
         </button>
       </aside>
 
