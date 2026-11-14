@@ -59,8 +59,9 @@ test.each(['catálogo', 'suscripciones'])('T-072: reintenta ambas consultas al f
   expect(listarSuscripciones).toHaveBeenCalledTimes(2);
 });
 
-test('T-073: catálogo vacío ofrece ir a suscripciones', async () => {
-  catalogoPorModulo.mockResolvedValue([]);
+test.each(['catálogo vacío', 'preferencias sin módulos disponibles'])('T-073: %s ofrece ir a suscripciones', async (escenario) => {
+  if (escenario === 'catálogo vacío') catalogoPorModulo.mockResolvedValue([]);
+  else modulosVisibles.mockReturnValue(['modulo-ausente']);
   render(<EventosSuscriptos />);
   expect(await screen.findByRole('heading', { name: 'No hay módulos para mostrar' })).toBeInTheDocument();
   expect(screen.getByRole('link', { name: 'Ir a Suscripciones' })).toHaveAttribute('href', '/suscripciones');
@@ -78,7 +79,10 @@ test('T-075, T-079, T-084, T-085: agrupa catálogo, refleja Core y explica estad
   await cargar();
   const tickets = screen.getByRole('heading', { name: /Tickets/ }).closest('section');
   expect(within(tickets).getAllByRole('checkbox')).toHaveLength(2);
-  expect(screen.getByRole('heading', { name: /users/ })).toBeInTheDocument();
+  expect(within(tickets).getByRole('heading')).toHaveTextContent('1/2');
+  const users = screen.getByRole('heading', { name: /users/ }).closest('section');
+  expect(within(users).getByRole('checkbox', { name: 'userCreated' })).not.toBeChecked();
+  expect(within(users).getByRole('heading')).toHaveTextContent('0/1');
   expect(checkbox('ticketCreated')).toBeChecked();
   expect(checkbox('userCreated')).not.toBeChecked();
   expect(screen.getByText('1 de 3 tipos')).toBeInTheDocument();
@@ -94,12 +98,17 @@ test('T-076, T-077: filtra sin distinguir mayúsculas ni espacios y restaura cat
   fireEvent.change(filtro, { target: { value: '  TICKET  ' } });
   expect(screen.getByRole('status')).toHaveTextContent('2 de 3 coinciden');
   expect(screen.getAllByRole('checkbox')).toHaveLength(2);
+  expect(checkbox('ticketCreated')).toBeChecked();
+  expect(checkbox(/ticketClosed/)).not.toBeChecked();
+  expect(screen.queryByRole('heading', { name: /users/ })).not.toBeInTheDocument();
   fireEvent.change(filtro, { target: { value: 'inexistente' } });
   expect(screen.getByRole('status')).toHaveTextContent('0 de 3 coinciden');
   expect(screen.queryAllByRole('checkbox')).toHaveLength(0);
+  expect(screen.getByRole('heading', { name: 'Ningún tipo contiene «inexistente»' })).toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: 'Ver todo el catálogo' }));
   expect(filtro).toHaveValue('');
   expect(screen.getAllByRole('checkbox')).toHaveLength(3);
+  expect(screen.queryByRole('status')).not.toBeInTheDocument();
 });
 
 test('T-078: anticipa altas y bajas y permite revertir selección', async () => {
@@ -109,9 +118,14 @@ test('T-078: anticipa altas y bajas y permite revertir selección', async () => 
   expect(screen.getByText('+1 para suscribir')).toBeInTheDocument();
   expect(screen.getByText('−1 para dar de baja')).toBeInTheDocument();
   expect(aplicar()).toBeEnabled();
+  expect(checkbox('userCreated')).toBeChecked();
+  expect(checkbox('ticketCreated')).not.toBeChecked();
+  expect(screen.getByText('1 de 3 tipos')).toBeInTheDocument();
   fireEvent.click(checkbox('userCreated'));
   fireEvent.click(checkbox('ticketCreated'));
   expect(aplicar()).toBeDisabled();
+  expect(screen.queryByText('+1 para suscribir')).not.toBeInTheDocument();
+  expect(screen.queryByText('−1 para dar de baja')).not.toBeInTheDocument();
 });
 
 test('T-080, T-083: sincroniza selección, muestra progreso y recarga estado real', async () => {
@@ -159,6 +173,10 @@ test('T-082: fallo conserva selección y permite reintentar sin recargar', async
   expect(checkbox('ticketCreated')).toBeChecked();
   expect(aplicar()).toBeEnabled();
   expect(catalogoPorModulo).toHaveBeenCalledTimes(1);
+  expect(listarSuscripciones).toHaveBeenCalledTimes(1);
+  const error = screen.getByRole('alert');
+  expect(error).toHaveClass('selection-status', 'error');
+  expect(aplicar().closest('.barra-aplicar').nextElementSibling).toBe(error);
   fireEvent.click(aplicar());
   expect(await screen.findByRole('status')).toHaveTextContent('Listo: 1 suscripción nueva.');
   expect(sincronizar).toHaveBeenNthCalledWith(2, ['ticketCreated', 'userCreated']);
