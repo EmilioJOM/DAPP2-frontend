@@ -4,7 +4,7 @@ module.exports = {
   transform: {
     '^.+\\.[jt]sx?$': 'babel-jest',
   },
-  cllectCoverageFrom: [
+  collectCoverageFrom: [
   	'src/**/*.{js,jsx}',
   	'!src/**/*.test.{js,jsx}',
   	'!src/setupTests.js',
