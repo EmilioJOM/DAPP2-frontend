@@ -72,20 +72,31 @@ test.each([true, false])('T-003: sesión activa muestra usuario, navegación y r
     .toEqual(['/', '/eventos-suscriptos', '/metrics', '/suscripciones']);
 });
 
-test('T-004 (parcial): la navegación monta las cuatro pantallas declaradas', () => {
+test.each([
+  ['/suscripciones', 'Pantalla suscripciones', 'Historial de eventos', 'Pantalla historial'],
+  ['/', 'Pantalla historial', 'Eventos Suscriptos', 'Pantalla eventos'],
+  ['/eventos-suscriptos', 'Pantalla eventos', 'Métricas', 'Pantalla métricas'],
+  ['/metrics', 'Pantalla métricas', 'Suscripciones', 'Pantalla suscripciones'],
+])('T-004 (parcial): ingreso directo a %s (%s) y navegación mediante %s', (
+  rutaInicial, pantallaInicial, enlace, pantalla,
+) => {
   session.start(datos);
-  montar();
-  for (const [enlace, pantalla] of [
-    ['Métricas', 'Pantalla métricas'],
-    ['Eventos Suscriptos', 'Pantalla eventos'],
-    ['Suscripciones', 'Pantalla suscripciones'],
-    ['Historial de eventos', 'Pantalla historial'],
-  ]) {
-    fireEvent.click(screen.getByRole('link', { name: enlace }));
-    expect(screen.getByRole('heading', { name: pantalla })).toBeInTheDocument();
-    expect(screen.getAllByRole('heading')).toHaveLength(1);
-    expect(screen.getByRole('link', { name: enlace })).toHaveAttribute('aria-current', 'page');
-  }
+  montar(rutaInicial);
+  const contenido = within(screen.getByRole('main'));
+  expect(contenido.getByRole('heading', { name: pantallaInicial })).toBeInTheDocument();
+  expect(contenido.getAllByRole('heading')).toHaveLength(1);
+  const navegacion = within(screen.getByRole('navigation'));
+  const enlaceInicial = navegacion.getAllByRole('link')
+    .find(link => link.getAttribute('href') === rutaInicial);
+  expect(enlaceInicial).toHaveAttribute('aria-current', 'page');
+
+  fireEvent.click(navegacion.getByRole('link', { name: enlace }));
+
+  expect(contenido.getByRole('heading', { name: pantalla })).toBeInTheDocument();
+  expect(contenido.queryByRole('heading', { name: pantallaInicial })).not.toBeInTheDocument();
+  expect(contenido.getAllByRole('heading')).toHaveLength(1);
+  expect(navegacion.getByRole('link', { name: enlace })).toHaveAttribute('aria-current', 'page');
+  expect(enlaceInicial).not.toHaveAttribute('aria-current');
 });
 
 test.each([[' ana ', 'A'], ['', '·'], ['   ', '·'], [undefined, '·']])(

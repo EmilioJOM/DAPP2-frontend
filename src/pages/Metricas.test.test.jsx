@@ -134,17 +134,29 @@ test.each([['up', 'conectado', 'ok'], ['down', 'caído', 'ko']])('T-126: broker 
   expect(await screen.findByText(text)).toHaveClass(css);
 });
 
-test('T-127 parcial: KPIs y rankings de módulo presentes en la implementación', async () => {
+test.each([
+  { label: 'con actividad', published: 12, total: 80, received: 9, delivered: 7, retry: 2, dlq: 3, avg: 15, max: 60 },
+  { label: 'sin actividad', published: 0, total: 0, received: 0, delivered: 0, retry: 0, dlq: 0, avg: 0, max: 0 },
+])('T-127 parcial: KPIs de módulo $label y rankings disponibles', async (values) => {
+  const board = moduleBoard();
+  board.published = { ...board.published, inWindow: values.published, total: values.total };
+  board.received = { total: values.received, delivered: values.delivered, pendingRetry: values.retry };
+  board.deadLetters = { open: values.dlq };
+  board.processing = { avgMs: values.avg, maxMs: values.max };
+  tableroDelModulo.mockResolvedValue(board);
   render(<Metricas />);
   await loaded();
-  expect(kpi('Publicados')).toHaveTextContent('12');
-  expect(kpi('Publicados')).toHaveTextContent('80 desde siempre');
-  expect(kpi('Recibidos')).toHaveTextContent('9');
-  expect(kpi('Recibidos')).toHaveTextContent('7 entregados · 2 reintentando');
-  expect(kpi('En dead letter')).toHaveTextContent('3');
-  expect(kpi('En dead letter')).toHaveClass('urgente');
-  expect(kpi('Procesamiento')).toHaveTextContent('15 ms');
-  expect(kpi('Procesamiento')).toHaveTextContent('máximo 60 ms');
+  for (const [title, value] of [
+    ['Publicados', String(values.published)], ['Recibidos', String(values.received)],
+    ['En dead letter', String(values.dlq)], ['Procesamiento', `${values.avg} ms`],
+  ]) {
+    expect(within(kpi(title)).getByText(value, { selector: 'strong', exact: true })).toBeVisible();
+  }
+  expect(kpi('Publicados')).toHaveTextContent(`${values.total} desde siempre`);
+  expect(kpi('Recibidos')).toHaveTextContent(`${values.delivered} entregados · ${values.retry} reintentando`);
+  expect(kpi('En dead letter').classList.contains('urgente')).toBe(values.dlq > 0);
+  expect(kpi('En dead letter')).toHaveTextContent(values.dlq > 0 ? 'Abiertos, esperando reproceso' : 'Nada pendiente de reproceso');
+  expect(kpi('Procesamiento')).toHaveTextContent(`máximo ${values.max} ms`);
   expect(screen.getByText('PagoConfirmado')).toBeVisible();
   expect(screen.getAllByText('PedidoCreado')).toHaveLength(2);
 });

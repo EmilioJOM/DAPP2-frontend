@@ -198,6 +198,32 @@ test('T-099: escribir no consulta; Buscar recorta y vuelve a página 1', async (
   expect(screen.queryByText('«rentas»')).not.toBeInTheDocument()
 })
 
+test.each([false, true])('T-100 (parcial): limpiar búsqueda desde página 2 restaura página 1 (vacío=%s)', async (vacio) => {
+  listarEventos.mockResolvedValue(respuesta())
+  pantalla()
+  await screen.findByText('paymentConfirmed')
+  buscar('rentas')
+  await waitFor(() => expect(listarEventos).toHaveBeenLastCalledWith({ page: 1, size: 25, query: 'rentas' }))
+  await screen.findByText(/página 1 de 3/)
+
+  listarEventos.mockResolvedValueOnce(vacio ? respuesta([], 0, 0) : respuesta())
+  fireEvent.click(screen.getByRole('button', { name: /siguiente/i }))
+  if (vacio) await screen.findByRole('heading', { name: /ningún evento coincide/i })
+  else await screen.findByText(/página 2 de 3/)
+  expect(listarEventos).toHaveBeenLastCalledWith({ page: 2, size: 25, query: 'rentas' })
+
+  // El borrador sin aplicar también debe limpiarse junto con la búsqueda activa.
+  fireEvent.change(screen.getByLabelText(/buscar eventos/i), { target: { value: 'otro módulo' } })
+  fireEvent.click(screen.getByRole('button', { name: vacio ? /ver todos los eventos/i : /quitar filtro/i }))
+
+  await screen.findByText(/página 1 de 3/)
+  expect(listarEventos).toHaveBeenLastCalledWith({ page: 1, size: 25, query: undefined })
+  expect(listarEventos).toHaveBeenCalledTimes(4)
+  expect(screen.getByLabelText(/buscar eventos/i)).toHaveValue('')
+  expect(screen.queryByText('«rentas»')).not.toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: /quitar filtro/i })).not.toBeInTheDocument()
+})
+
 test.each([false, true])('T-101/102/103: JSON completo o respaldo, y cierre (fallo=%s)', async (fallo) => {
   const fila = evento()
   const completo = { ...fila, payload: { importe: 42 } }
