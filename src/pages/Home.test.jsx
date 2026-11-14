@@ -1,6 +1,7 @@
-import { expect, jest, test, beforeEach, describe } from '@jest/globals'
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { listarEventos } from '../services/events'
+import { expect, jest, test, beforeEach, afterEach, describe } from '@jest/globals'
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { session } from '../services/session'
+import { listarEventos, obtenerEvento } from '../services/events'
 import Home from './Home'
 
 // react-router se publica solo como ESM y usa `import.meta`, que babel-jest no
@@ -27,13 +28,19 @@ jest.mock('../services/api', () => ({
   mensajeDeError: (_e, porDefecto) => porDefecto,
 }))
 jest.mock('../services/session', () => ({
-  session: { esAdmin: () => false, getModulo: () => 'rentas' },
+  session: { esAdmin: jest.fn(() => false), getModulo: () => 'rentas' },
 }))
 
 
 const pantalla = () => render(<Home />)
 
-beforeEach(() => jest.clearAllMocks())
+afterEach(() => jest.restoreAllMocks())
+
+beforeEach(() => {
+  jest.resetAllMocks()
+  session.esAdmin.mockReturnValue(false)
+  jest.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-10-06T16:00:00Z'))
+})
 
 describe('Historial de eventos', () => {
   test('muestra los eventos que devuelve el Core', async () => {
@@ -133,4 +140,144 @@ describe('Historial de eventos', () => {
     ).toBeInTheDocument()
     expect(listarEventos).toHaveBeenCalledTimes(2)
   })
+})
+
+const evento = (extra = {}) => ({
+  id: '1', eventId: 'e1', eventType: 'paymentConfirmed', sourceModule: 'rentas',
+  occurredAt: '2026-10-06T15:00:00Z', receivedAt: '2026-10-06T15:00:01Z',
+  status: 'ROUTED', deliveryCount: 2, deliveredCount: 2, ...extra,
+})
+const respuesta = (items = [evento()], total = 51, pages = 3) => ({ items, total, pages })
+const buscar = (value) => {
+  fireEvent.change(screen.getByLabelText(/buscar eventos/i), { target: { value } })
+  fireEvent.click(screen.getByRole('button', { name: /^buscar$/i }))
+}
+const diferida = () => {
+  let resolve, reject
+  const promise = new Promise((ok, fail) => { resolve = ok; reject = fail })
+  return { promise, resolve, reject }
+}
+
+test('T-098: pagina con size 25 y limita ambos extremos', async () => {
+  listarEventos.mockResolvedValue(respuesta())
+  pantalla()
+  await screen.findByText('paymentConfirmed')
+  expect(listarEventos).toHaveBeenLastCalledWith({ page: 1, size: 25, query: undefined })
+  expect(screen.getByRole('button', { name: /anterior/i })).toBeDisabled()
+  fireEvent.click(screen.getByRole('button', { name: /anterior/i }))
+  expect(listarEventos).toHaveBeenCalledTimes(1)
+  for (const page of [2, 3]) {
+    fireEvent.click(screen.getByRole('button', { name: /siguiente/i }))
+    await screen.findByText(new RegExp(`página ${page} de 3`))
+    expect(listarEventos).toHaveBeenLastCalledWith({ page, size: 25, query: undefined })
+  }
+  expect(screen.getByText('51–51 de 51 · página 3 de 3')).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: /siguiente/i })).toBeDisabled()
+  fireEvent.click(screen.getByRole('button', { name: /siguiente/i }))
+  expect(listarEventos).toHaveBeenCalledTimes(3)
+  fireEvent.click(screen.getByRole('button', { name: /anterior/i }))
+  await screen.findByText(/página 2 de 3/)
+  expect(listarEventos).toHaveBeenLastCalledWith({ page: 2, size: 25, query: undefined })
+})
+
+test('T-099: escribir no consulta; Buscar recorta y vuelve a página 1', async () => {
+  listarEventos.mockResolvedValue(respuesta())
+  pantalla()
+  await screen.findByText('paymentConfirmed')
+  fireEvent.click(screen.getByRole('button', { name: /siguiente/i }))
+  await screen.findByText(/página 2 de 3/)
+  fireEvent.change(screen.getByLabelText(/buscar eventos/i), { target: { value: '  rentas  ' } })
+  expect(listarEventos).toHaveBeenCalledTimes(2)
+  fireEvent.click(screen.getByRole('button', { name: /^buscar$/i }))
+  await screen.findByText(/página 1 de 3/)
+  expect(listarEventos).toHaveBeenLastCalledWith({ page: 1, size: 25, query: 'rentas' })
+  expect(screen.getByText('«rentas»')).toBeInTheDocument()
+  fireEvent.click(screen.getByRole('button', { name: /quitar filtro/i }))
+  await waitFor(() => expect(listarEventos).toHaveBeenLastCalledWith({ page: 1, size: 25, query: undefined }))
+  expect(screen.getByLabelText(/buscar eventos/i)).toHaveValue('')
+  expect(screen.queryByText('«rentas»')).not.toBeInTheDocument()
+})
+
+test.each([false, true])('T-101/102/103: JSON completo o respaldo, y cierre (fallo=%s)', async (fallo) => {
+  const fila = evento()
+  const completo = { ...fila, payload: { importe: 42 } }
+  listarEventos.mockResolvedValue(respuesta([fila], 1, 1))
+  if (fallo) obtenerEvento.mockRejectedValue(new Error('sin conexión'))
+  else obtenerEvento.mockResolvedValue(completo)
+  pantalla()
+  fireEvent.click(await screen.findByRole('button', { name: /JSON/ }))
+  const dialog = await screen.findByRole('dialog')
+  expect(obtenerEvento).toHaveBeenCalledWith('e1')
+  expect(JSON.parse(dialog.querySelector('pre').textContent)).toEqual(fallo ? fila : completo)
+  fireEvent.click(within(dialog).getAllByRole('button', { name: 'Cerrar' })[0])
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  expect(screen.getByRole('table')).toBeInTheDocument()
+})
+
+test.each(['inválida', undefined])('T-104: fecha %s muestra marcador sin time', async (occurredAt) => {
+  listarEventos.mockResolvedValue(respuesta([evento({ occurredAt })]))
+  pantalla()
+  const fila = (await screen.findByText('paymentConfirmed')).closest('tr')
+  expect(within(fila).getAllByRole('cell')[2]).toHaveTextContent('—')
+  expect(fila.querySelector('time')).toBeNull()
+})
+
+test.each([
+  ['2026-10-06T14:59:59Z', '—'], [undefined, '—'],
+  ['2026-10-06T15:00:00.500Z', '500 ms'], ['2026-10-06T15:00:02Z', '2,0 s'],
+  ['2026-10-06T15:02:00Z', '2 min'], ['2026-10-06T17:00:00Z', '2 h'],
+])('T-105: demora con recepción %s muestra %s', async (receivedAt, texto) => {
+  listarEventos.mockResolvedValue(respuesta([evento({ receivedAt })]))
+  pantalla()
+  const fila = (await screen.findByText('paymentConfirmed')).closest('tr')
+  expect(within(fila).getAllByRole('cell')[3]).toHaveTextContent(texto)
+})
+
+test('T-106: estado desconocido y motivo de rechazo visibles', async () => {
+  listarEventos.mockResolvedValue(respuesta([evento({ status: 'NUEVO', rejectionCode: 'INVALID_SCHEMA' })]))
+  pantalla()
+  expect(await screen.findByText('NUEVO')).toHaveClass('estado--muted')
+  expect(screen.getByText('INVALID_SCHEMA')).toBeInTheDocument()
+})
+
+test.each([
+  [undefined, undefined, '—', 'muted', 'Ningún módulo estaba suscripto a este tipo'],
+  [0, 0, '—', 'muted', 'Ningún módulo estaba suscripto a este tipo'],
+  [1, 3, '1/3', 'warn', '1 de 3 suscripciones recibieron este evento'],
+  [3, 3, '3/3', 'ok', '3 de 3 suscripciones recibieron este evento'],
+])('T-107: entregas %s/%s tienen etiqueta y tono', async (deliveredCount, deliveryCount, texto, tono, title) => {
+  listarEventos.mockResolvedValue(respuesta([evento({ deliveredCount, deliveryCount })]))
+  pantalla()
+  const fila = (await screen.findByText('paymentConfirmed')).closest('tr')
+  const celda = within(fila).getAllByRole('cell')[5]
+  expect(celda).toHaveTextContent(texto)
+  expect(celda).toHaveClass(`entregas--${tono}`)
+  expect(within(celda).getByTitle(title)).toBeInTheDocument()
+})
+
+test.each([true, false])('T-108: alcance visible según admin=%s', async (admin) => {
+  session.esAdmin.mockReturnValue(admin)
+  listarEventos.mockResolvedValue(respuesta())
+  pantalla()
+  await screen.findByText('paymentConfirmed')
+  expect(screen.getByText(admin ? 'Todo el tráfico del hub.' : 'Lo que publicó y lo que recibió rentas.')).toBeInTheDocument()
+})
+
+test.each(['resolve', 'reject'])('T-109: respuesta obsoleta (%s) no reemplaza consulta nueva', async (terminar) => {
+  const vieja = diferida()
+  listarEventos.mockResolvedValueOnce(respuesta()).mockReturnValueOnce(vieja.promise)
+    .mockResolvedValueOnce(respuesta([evento({ eventType: 'resultadoNuevo' })]))
+  pantalla()
+  await screen.findByText('paymentConfirmed')
+  fireEvent.click(screen.getByRole('button', { name: /siguiente/i }))
+  await waitFor(() => expect(listarEventos).toHaveBeenCalledTimes(2))
+  buscar('nuevo')
+  await screen.findByText('resultadoNuevo')
+  await act(async () => {
+    vieja[terminar](terminar === 'resolve' ? respuesta([evento({ eventType: 'obsoleto' })]) : new Error('vieja'))
+  })
+  expect(screen.getByText('resultadoNuevo')).toBeInTheDocument()
+  expect(screen.queryByText('obsoleto')).not.toBeInTheDocument()
+  expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  expect(screen.getByText(/página 1 de 3/)).toBeInTheDocument()
 })

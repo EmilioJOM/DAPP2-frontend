@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/14</span>
+                <span class='fraction'>14/14</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/8</span>
+                <span class='fraction'>8/8</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/6</span>
+                <span class='fraction'>6/6</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/10</span>
+                <span class='fraction'>10/10</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line low'></div>
+    <div class='status-line high'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -99,22 +99,20 @@
 <a name='L34'></a><a href='#L34'>34</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">9x</span>
+<span class="cline-any cline-yes">9x</span>
+<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-yes">8x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">9x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -122,7 +120,9 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -131,21 +131,21 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { useEffect } from "react";
 &nbsp;
-export default function <span class="fstat-no" title="function not covered" >JsonModal(</span>{ data, onClose }) {
-<span class="cstat-no" title="statement not covered" >  useEffect(<span class="fstat-no" title="function not covered" >()</span> =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >    if (!data) <span class="cstat-no" title="statement not covered" >return;</span></span>
-    const handleKey = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >(e</span>vent) =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >      if (event.key === "Escape") <span class="cstat-no" title="statement not covered" >onClose();</span></span>
+export default function JsonModal({ data, onClose }) {
+  useEffect(() =&gt; {
+    if (!data) return;
+    const handleKey = (event) =&gt; {
+      if (event.key === "Escape") onClose();
     };
-<span class="cstat-no" title="statement not covered" >    window.addEventListener("keydown", handleKey);</span>
-<span class="cstat-no" title="statement not covered" >    return <span class="fstat-no" title="function not covered" >()</span> =&gt; <span class="cstat-no" title="statement not covered" >window.removeEventListener("keydown", handleKey);</span></span>
+    window.addEventListener("keydown", handleKey);
+    return () =&gt; window.removeEventListener("keydown", handleKey);
   }, [data, onClose]);
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  if (!data) <span class="cstat-no" title="statement not covered" >return null;</span></span>
+  if (!data) return null;
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  return (</span>
+  return (
     &lt;div className="json-modal-backdrop" role="presentation" onMouseDown={onClose}&gt;
-      &lt;section className="json-modal" role="dialog" aria-modal="true" aria-labelledby="json-modal-title" onMouseDown={<span class="fstat-no" title="function not covered" >(e</span>)=&gt;<span class="cstat-no" title="statement not covered" >e.stopPropagation()}</span>&gt;
+      &lt;section className="json-modal" role="dialog" aria-modal="true" aria-labelledby="json-modal-title" onMouseDown={(e)=&gt;e.stopPropagation()}&gt;
         &lt;header&gt;
           &lt;div&gt;
             &lt;span className="json-modal-kicker"&gt;Sobre del evento&lt;/span&gt;
@@ -155,7 +155,7 @@ export default function <span class="fstat-no" title="function not covered" >Jso
         &lt;/header&gt;
         &lt;pre&gt;&lt;code&gt;{JSON.stringify(data, null, 2)}&lt;/code&gt;&lt;/pre&gt;
         &lt;footer&gt;
-          &lt;button type="button" onClick={<span class="fstat-no" title="function not covered" >()</span>=&gt;<span class="cstat-no" title="statement not covered" >navigator.clipboard?.writeText(JSON.stringify(data, null, 2))}</span>&gt;Copiar JSON&lt;/button&gt;
+          &lt;button type="button" onClick={()=&gt;navigator.clipboard?.writeText(JSON.stringify(data, null, 2))}&gt;Copiar JSON&lt;/button&gt;
           &lt;button className="primary" type="button" onClick={onClose}&gt;Cerrar&lt;/button&gt;
         &lt;/footer&gt;
       &lt;/section&gt;
@@ -169,7 +169,7 @@ export default function <span class="fstat-no" title="function not covered" >Jso
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-11-14T05:42:03.070Z
+                at 2026-11-14T13:02:09.353Z
             </div>
         <script src="../prettify.js"></script>
         <script>

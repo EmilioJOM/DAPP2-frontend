@@ -1,39 +1,54 @@
 import path from 'node:path';
-import { execFileSync } from 'node:child_process';
-import axios from 'axios';
+import { readFileSync } from 'node:fs';
+import { Script } from 'node:vm';
 
-// Jest ejecuta CommonJS; sustituimos solo el entorno de Vite al cargar el
-// archivo real. Axios conserva sus interceptores y usa un adaptador sin red.
-function cargarApi(env = {}) {
-  const filename = path.join(__dirname, 'api.js');
-  const code = execFileSync(process.execPath, ['--input-type=module', '-e', `
-    import { transformSync } from '@babel/core';
-    import fs from 'node:fs';
-    const { filename, env } = JSON.parse(fs.readFileSync(0, 'utf8'));
-    const { code } = transformSync(fs.readFileSync(filename, 'utf8'), {
-    filename,
-    plugins: [({ types: t }) => ({
+jest.mock('./session', () => ({
+  session: { getToken: jest.fn(), clear: jest.fn() },
+}));
+
+// Babel 8 se carga con Node; los imports del módulo se resuelven con Jest.
+const { _load } = require('node:module');
+const { transformSync } = _load(require.resolve('@babel/core'), null, false);
+const filename = path.join(__dirname, 'api.js');
+const { code } = transformSync(readFileSync(filename, 'utf8'), {
+  filename,
+  presets: [['@babel/preset-env', { targets: { node: 'current' }, modules: 'commonjs' }]],
+  plugins: [
+    // El código evaluado también debe aportar su cobertura real a Jest.
+    ['babel-plugin-istanbul', {
+      nycConfig: {},
+      coverageGlobalScope: 'globalThis',
+      coverageGlobalScopeFunc: false,
+    }],
+    ({ types: t }) => ({
       visitor: {
         MemberExpression(nodePath) {
           const { object, property } = nodePath.node;
           if (t.isMetaProperty(object) && object.meta.name === 'import'
             && object.property.name === 'meta' && t.isIdentifier(property, { name: 'env' })) {
-            nodePath.replaceWith(t.valueToNode(env));
+            nodePath.replaceWith(t.identifier('testEnv'));
           }
         },
       },
-    })],
-    });
-    process.stdout.write(code);
-  `], { input: JSON.stringify({ filename, env }), encoding: 'utf8', timeout: 10000 });
-  const session = { getToken: jest.fn().mockReturnValue(null), clear: jest.fn() };
+    }),
+  ],
+});
+
+// Solo se evalúa CommonJS ya transformado, con require y mocks de Jest.
+// runInThisContext usa los globals de Node: pasar explícitamente el DOM de Jest.
+const ejecutarApi = new Script(`(function(require, module, exports, testEnv, globalThis, window, Event) {
+${code}
+})`, {
+  filename,
+}).runInThisContext();
+
+// Axios conserva sus interceptores y usa un adaptador sin red.
+function cargarApi(env = {}) {
+  jest.resetModules();
+  const { session } = require('./session');
+  session.getToken.mockReturnValue(null);
   const module = { exports: {} };
-  const mockRequire = (name) => {
-    if (name === 'axios') return axios;
-    if (name === './session') return { session };
-    throw new Error(`Import inesperado: ${name}`);
-  };
-  new Function('require', 'module', 'exports', code)(mockRequire, module, module.exports);
+  ejecutarApi(require, module, module.exports, env, globalThis, window, window.Event);
   return { api: module.exports.default, mensajeDeError: module.exports.mensajeDeError, session };
 }
 
