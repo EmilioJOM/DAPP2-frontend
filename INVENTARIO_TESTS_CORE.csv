@@ -1,0 +1,248 @@
+﻿id,file,test_file,status,difficulty,priority,case
+T-001,App.jsx,App.test.test.jsx,aprobado,low,P2,"Sin sesión almacenada, renderiza Login y oculta sidebar/rutas protegidas."
+T-002,App.jsx,App.test.test.jsx,aprobado,medium,P2,Login exitoso actualiza la sesión visible sin recargar la página.
+T-003,App.jsx,App.test.test.jsx,aprobado,medium,P2,"Con sesión activa muestra sidebar, perfil, rol y navegación principal."
+T-004,App.jsx,App.test.test.jsx,pendiente,medium,P2,"Cada ruta /, /eventos-suscriptos, /metrics, /suscripciones y /dlq monta su pantalla."
+T-005,App.jsx,App.test.test.jsx,aprobado,low,P2,La inicial del avatar usa actor; actor vacío o espacios produce el carácter de respaldo.
+T-006,App.jsx,App.test.test.jsx,aprobado,medium,P2,Abrir y cerrar UserProfile desde el botón del usuario.
+T-007,App.jsx,App.test.test.jsx,aprobado,medium,P2,Cerrar sesión borra sessionStorage y vuelve a Login.
+T-008,App.jsx,App.test.test.jsx,aprobado,hard,P2,"Evento global core:sesion-expirada cierra perfil, invalida sesión y muestra aviso de expiración."
+T-009,App.jsx,App.test.test.jsx,aprobado,medium,P2,Tras volver a ingresar se limpia el aviso de sesión expirada.
+T-010,App.jsx,App.test.test.jsx,aprobado,medium,P2,La sesión existente al montar App no obliga a loguearse otra vez.
+T-011,components/AlertasDeIntegracion.jsx,components/AlertasDeIntegracion.test.jsx,aprobado,medium,verificar,"dice una sola vez lo que le pasa a todo el grupo, no una vez por renglón"
+T-012,components/AlertasDeIntegracion.jsx,components/AlertasDeIntegracion.test.jsx,aprobado,medium,verificar,las que piden acción arrancan abiertas y las informativas plegadas
+T-013,components/AlertasDeIntegracion.jsx,components/AlertasDeIntegracion.test.jsx,aprobado,low,verificar,un kind que el panel no conoce se muestra entero en vez de romper
+T-014,components/AlertasDeIntegracion.jsx,components/AlertasDeIntegracion.test.jsx,aprobado,low,verificar,una severidad desconocida no se pierde ni se pinta de cualquier color
+T-015,components/AlertasDeIntegracion.jsx,components/AlertasDeIntegracion.test.jsx,aprobado,low,verificar,el total viene con cuántas piden que alguien haga algo
+T-016,components/AlertasDeIntegracion.jsx,components/AlertasDeIntegracion.test.jsx,aprobado,low,verificar,"sin alertas lo dice, en vez de no mostrar nada"
+T-017,components/AlertasDeIntegracion.jsx,components/AlertasDeIntegracion.test.jsx,aprobado,low,P2,Alertas de cada severidad muestran su etiqueta y la acción correspondiente sin duplicarse.
+T-018,components/AlertasDeIntegracion.jsx,components/AlertasDeIntegracion.test.jsx,aprobado,medium,P2,Filtrar por texto o condición aplica a los grupos y actualiza recuentos.
+T-019,components/AlertasDeIntegracion.jsx,components/AlertasDeIntegracion.test.jsx,aprobado,medium,P2,Borrar filtro restaura todos los grupos y los recuentos.
+T-020,components/AlertasDeIntegracion.jsx,components/AlertasDeIntegracion.test.jsx,aprobado,low,P2,Expandir y contraer manualmente un grupo conserva la interacción accesible.
+T-021,components/AlertasDeIntegracion.jsx,components/AlertasDeIntegracion.test.jsx,aprobado,medium,P2,La agrupación no mezcla alertas de distintas clases o módulos.
+T-022,components/AlertasDeIntegracion.jsx,components/AlertasDeIntegracion.test.jsx,aprobado,medium,P2,"Alertas con valores, listas o campos faltantes no rompen el render."
+T-023,components/AlertasDeIntegracion.jsx,components/AlertasDeIntegracion.test.jsx,aprobado,low,P2,Textos plurales y estados de coincidencias usan cantidades correctas.
+T-024,components/Esqueleto.jsx,components/Esqueleto.test.test.jsx,aprobado,low,P2,EsqueletoTabla respeta cantidad de filas y columnas por defecto.
+T-025,components/Esqueleto.jsx,components/Esqueleto.test.test.jsx,aprobado,low,P2,EsqueletoTabla acepta filas y columnas personalizadas.
+T-026,components/Esqueleto.jsx,components/Esqueleto.test.test.jsx,aprobado,low,P2,EsqueletoKpis respeta cantidad por defecto y personalizada.
+T-027,components/Esqueleto.jsx,components/Esqueleto.test.test.jsx,aprobado,low,P2,EsqueletoTarjetas respeta cantidad por defecto y personalizada.
+T-028,components/Esqueleto.jsx,components/Esqueleto.test.test.jsx,aprobado,low,P2,EsqueletoTarjetas incorpora la altura indicada por prop.
+T-029,components/Estados.jsx,components/Estados.test.test.jsx,aprobado,low,P2,"ErrorDeCarga presenta título, mensaje y texto explicativo."
+T-030,components/Estados.jsx,components/Estados.test.test.jsx,aprobado,low,P2,ErrorDeCarga con onReintentar muestra botón y ejecuta callback.
+T-031,components/Estados.jsx,components/Estados.test.test.jsx,aprobado,low,P2,ErrorDeCarga sin callback no muestra acción inválida.
+T-032,components/Estados.jsx,components/Estados.test.test.jsx,aprobado,low,P2,"SinDatos renderiza título, descripción y contenido hijo."
+T-033,components/Estados.jsx,components/Estados.test.test.jsx,aprobado,low,P2,SinDatos muestra acción opcional sin perder semántica.
+T-034,components/JsonModal.jsx,components/JsonModal.test.test.jsx,aprobado,low,P2,Con data=null no renderiza el modal ni registra un diálogo.
+T-035,components/JsonModal.jsx,components/JsonModal.test.test.jsx,aprobado,low,P2,Con datos válidos muestra eventType y JSON formateado.
+T-036,components/JsonModal.jsx,components/JsonModal.test.test.jsx,aprobado,low,P2,Sin eventType emplea título de respaldo.
+T-037,components/JsonModal.jsx,components/JsonModal.test.test.jsx,aprobado,low,P2,Escape ejecuta onClose y se desregistra el listener al desmontar.
+T-038,components/JsonModal.jsx,components/JsonModal.test.test.jsx,aprobado,low,P2,Clic sobre el backdrop cierra el modal; clic dentro no lo cierra.
+T-039,components/JsonModal.jsx,components/JsonModal.test.test.jsx,aprobado,low,P2,Botones Cerrar y X disparan onClose.
+T-040,components/JsonModal.jsx,components/JsonModal.test.test.jsx,aprobado,medium,P2,Copiar JSON llama navigator.clipboard.writeText con el sobre completo si clipboard está disponible.
+T-041,components/UserProfile.jsx,components/UserProfile.test.test.jsx,aprobado,low,P2,"Muestra datos de sesión, módulo, cola y alcance de un usuario normal."
+T-042,components/UserProfile.jsx,components/UserProfile.test.test.jsx,aprobado,low,P2,Muestra rol de administrador y alcance global si isAdmin=true.
+T-043,components/UserProfile.jsx,components/UserProfile.test.test.jsx,aprobado,medium,P2,miCuenta carga y muestra nombre/correo reales; fallback usa datos de sesión.
+T-044,components/UserProfile.jsx,components/UserProfile.test.test.jsx,aprobado,medium,P2,"Si miCuenta falla o no encuentra cuenta, el componente sigue renderizando."
+T-045,components/UserProfile.jsx,components/UserProfile.test.test.jsx,aprobado,low,P2,Clic en fondo cierra y clic dentro no cierra; el botón X también cierra.
+T-046,components/UserProfile.jsx,components/UserProfile.test.test.jsx,aprobado,low,P2,Contraseña de menos de 8 caracteres se rechaza sin llamar API.
+T-047,components/UserProfile.jsx,components/UserProfile.test.test.jsx,aprobado,low,P2,Contraseñas que no coinciden muestran error y no llaman API.
+T-048,components/UserProfile.jsx,components/UserProfile.test.test.jsx,aprobado,medium,P2,Sin cuenta identificada no se permite cambiar contraseña.
+T-049,components/UserProfile.jsx,components/UserProfile.test.test.jsx,aprobado,medium,P2,"Cambio correcto invoca authService.cambiarPassword con id correcto, limpia campos y avisa."
+T-050,components/UserProfile.jsx,components/UserProfile.test.test.jsx,aprobado,medium,P2,Durante el cambio se deshabilita el botón para evitar envíos múltiples.
+T-051,components/UserProfile.jsx,components/UserProfile.test.test.jsx,aprobado,medium,P2,Fallo al cambiar contraseña muestra mensaje del Core sin limpiar entradas.
+T-052,components/UserProfile.jsx,components/UserProfile.test.test.jsx,aprobado,low,P2,Cerrar sesión invoca onLogout.
+T-053,pages/Dlq.jsx,pages/Dlq.test.test.jsx,existente,medium,verificar,lista las fallas del módulo con su motivo
+T-054,pages/Dlq.jsx,pages/Dlq.test.test.jsx,existente,hard,verificar,"el detalle muestra el motivo, los datos enviados y el historial de reintentos"
+T-055,pages/Dlq.jsx,pages/Dlq.test.test.jsx,existente,hard,verificar,el reintento se pide una sola vez aunque se haga doble clic
+T-056,pages/Dlq.jsx,pages/Dlq.test.test.jsx,existente,medium,verificar,si el Core rechaza el reintento se muestra el motivo
+T-057,pages/Dlq.jsx,pages/Dlq.test.test.jsx,existente,medium,verificar,un mensaje malformado o ya resuelto no ofrece reintentar
+T-058,pages/Dlq.jsx,pages/Dlq.test.test.jsx,existente,medium,verificar,el filtro de estado vuelve a pedir la lista
+T-059,pages/Dlq.jsx,pages/Dlq.test.test.jsx,existente,medium,verificar,avisa si el Core no responde
+T-060,pages/Dlq.jsx,pages/Dlq.test.test.jsx,pendiente,low,P2,Loading muestra esqueleto antes de que responda listarDeadLetters.
+T-061,pages/Dlq.jsx,pages/Dlq.test.test.jsx,pendiente,low,P2,Estado OPEN vacío y otros estados vacíos muestran mensajes diferenciados.
+T-062,pages/Dlq.jsx,pages/Dlq.test.test.jsx,pendiente,medium,P2,"Paginación cambia page, controla límites y deshabilita anterior/siguiente."
+T-063,pages/Dlq.jsx,pages/Dlq.test.test.jsx,pendiente,medium,P2,Cambiar filtro reinicia página a 1 y consulta status vacío al elegir Todas.
+T-064,pages/Dlq.jsx,pages/Dlq.test.test.jsx,pendiente,medium,P2,Error de listado ofrece Reintentar y vuelve a consultar sin reload.
+T-065,pages/Dlq.jsx,pages/Dlq.test.test.jsx,pendiente,medium,P2,Detalle carga con mensaje intermedio; error de obtenerDeadLetter es visible y se puede cerrar.
+T-066,pages/Dlq.jsx,pages/Dlq.test.test.jsx,pendiente,low,P2,"Campos opcionales ausentes, timestamp inválido y estado desconocido usan respaldos."
+T-067,pages/Dlq.jsx,pages/Dlq.test.test.jsx,pendiente,medium,P2,La vista cambia su descripción según esAdmin/getModulo sin filtrar datos en el cliente.
+T-068,pages/Dlq.jsx,pages/Dlq.test.test.jsx,pendiente,hard,P2,"Reintentar desde el detalle vuelve a consultar detalle y listado, manteniendo estado coherente."
+T-069,pages/Dlq.jsx,pages/Dlq.test.test.jsx,pendiente,medium,P2,Reintento respondido con success=false muestra fallo funcional y restaura botones.
+T-070,pages/Dlq.jsx,pages/Dlq.test.test.jsx,pendiente,medium,P2,El detalle sin retries muestra estado vacío; con rawBody sin rawPayload muestra texto bruto.
+T-071,pages/EventosSuscriptos.jsx,pages/EventosSuscriptos.test.jsx,aprobado,low,P0,Loading muestra EsqueletoTarjetas; error de carga conserva encabezado.
+T-072,pages/EventosSuscriptos.jsx,pages/EventosSuscriptos.test.jsx,aprobado,medium,P0,Reintentar error de catálogo o de suscripciones ejecuta ambas consultas otra vez.
+T-073,pages/EventosSuscriptos.jsx,pages/EventosSuscriptos.test.jsx,aprobado,medium,P0,Cuando no hay módulos muestra aviso y enlace a /suscripciones.
+T-074,pages/EventosSuscriptos.jsx,pages/EventosSuscriptos.test.jsx,aprobado,medium,P0,"Si existe preferencia de módulos, oculta solo los no elegidos."
+T-075,pages/EventosSuscriptos.jsx,pages/EventosSuscriptos.test.jsx,aprobado,low,P0,"Carga inicial muestra tipos agrupados, selección real del Core y contador total."
+T-076,pages/EventosSuscriptos.jsx,pages/EventosSuscriptos.test.jsx,aprobado,medium,P0,Filtrar por nombre ignora mayúsculas y espacios laterales; muestra contador de coincidencias.
+T-077,pages/EventosSuscriptos.jsx,pages/EventosSuscriptos.test.jsx,aprobado,low,P0,Búsqueda sin resultados ofrece restaurar catálogo.
+T-078,pages/EventosSuscriptos.jsx,pages/EventosSuscriptos.test.jsx,aprobado,medium,P0,Tildar y destildar muestra altas/bajas previstas y habilita Aplicar solo con cambios.
+T-079,pages/EventosSuscriptos.jsx,pages/EventosSuscriptos.test.jsx,aprobado,medium,P0,"Si no hay cambios, Aplicar queda deshabilitado y se explica que Core ya coincide."
+T-080,pages/EventosSuscriptos.jsx,pages/EventosSuscriptos.test.jsx,aprobado,hard,P0,Aplicar llama sincronizar con tipos elegidos y luego recarga catálogo y suscripciones del Core.
+T-081,pages/EventosSuscriptos.jsx,pages/EventosSuscriptos.test.jsx,aprobado,medium,P0,"Mensaje de éxito distingue altas, bajas, ambas y ausencia de cambios."
+T-082,pages/EventosSuscriptos.jsx,pages/EventosSuscriptos.test.jsx,aprobado,hard,P0,"Error al sincronizar conserva casillas tildadas, muestra mensaje junto a Aplicar y habilita reintento."
+T-083,pages/EventosSuscriptos.jsx,pages/EventosSuscriptos.test.jsx,aprobado,medium,P0,Guardando deshabilita Aplicar y muestra estado de progreso.
+T-084,pages/EventosSuscriptos.jsx,pages/EventosSuscriptos.test.jsx,aprobado,low,P0,Tipo descubierto sin declarar exhibe advertencia específica.
+T-085,pages/EventosSuscriptos.jsx,pages/EventosSuscriptos.test.jsx,aprobado,low,P0,El texto de la cola se forma con q.{session.getModulo()}.
+T-086,pages/Home.jsx,pages/Home.test.jsx,aprobado,medium,verificar,muestra los eventos que devuelve el Core
+T-087,pages/Home.jsx,pages/Home.test.jsx,aprobado,low,verificar,explica qué hacer cuando no llegó ningún evento
+T-088,pages/Home.jsx,pages/Home.test.jsx,aprobado,low,verificar,"mientras espera al Core muestra el esqueleto, no una pantalla vacía"
+T-089,pages/Home.jsx,pages/Home.test.jsx,aprobado,medium,verificar,avisa si el Core no responde
+T-090,pages/Home.jsx,pages/Home.test.jsx,aprobado,medium,verificar,una búsqueda sin resultados no se confunde con un hub sin eventos
+T-091,pages/Home.jsx,pages/Home.test.jsx,pendiente,hard,verificar,filtra por eventId pidiendo ese evento exacto (HU-06)
+T-092,pages/Home.jsx,pages/Home.test.jsx,pendiente,medium,verificar,un eventId inexistente se informa como 
+T-093,pages/Home.jsx,pages/Home.test.jsx,pendiente,low,verificar,un eventId mal formado no dispara el pedido
+T-094,pages/Home.jsx,pages/Home.test.jsx,pendiente,hard,verificar,filtra por estado y rango de fechas con la API (HU-06)
+T-095,pages/Home.jsx,pages/Home.test.jsx,pendiente,low,verificar,un rango invertido se avisa y no se aplica
+T-096,pages/Home.jsx,pages/Home.test.jsx,pendiente,medium,verificar,las fechas cubren el día completo en la hora local
+T-097,pages/Home.jsx,pages/Home.test.jsx,aprobado,medium,verificar,cuando el Core no responde ofrece reintentar sin recargar la página
+T-098,pages/Home.jsx,pages/Home.test.jsx,aprobado,medium,P2,Paginación pide page y size=25 correctos y respeta límites de controles.
+T-099,pages/Home.jsx,pages/Home.test.jsx,aprobado,medium,P2,Ingresar búsqueda no consulta automáticamente; Buscar aplica término recortado y vuelve a página 1.
+T-100,pages/Home.jsx,pages/Home.test.jsx,pendiente,medium,P2,"Quitar filtros restaura búsqueda, estado, fechas, eventId y página 1."
+T-101,pages/Home.jsx,pages/Home.test.jsx,aprobado,medium,P2,Al abrir JSON se consulta el sobre completo mediante obtenerEvento.
+T-102,pages/Home.jsx,pages/Home.test.jsx,aprobado,medium,P2,"Si falla obtenerEvento al abrir JSON, el modal usa la fila original como respaldo."
+T-103,pages/Home.jsx,pages/Home.test.jsx,aprobado,medium,P2,El modal JSON se cierra y no permanece sobre el historial.
+T-104,pages/Home.jsx,pages/Home.test.jsx,aprobado,low,P2,Evento con fecha inválida o faltante muestra marcador y no un time inválido.
+T-105,pages/Home.jsx,pages/Home.test.jsx,aprobado,low,P2,Demora negativa o indefinida muestra marcador; duración válida muestra unidad apropiada.
+T-106,pages/Home.jsx,pages/Home.test.jsx,aprobado,low,P2,Estados desconocidos y códigos de rechazo se muestran sin fallar.
+T-107,pages/Home.jsx,pages/Home.test.jsx,aprobado,medium,P2,"Entregas 0, incompletas y completas tienen etiquetas y estilos semánticos correctos."
+T-108,pages/Home.jsx,pages/Home.test.jsx,aprobado,medium,P2,Usuario admin ve alcance global y módulo ve alcance propio.
+T-109,pages/Home.jsx,pages/Home.test.jsx,aprobado,hard,P2,Respuesta obsoleta tras cambiar rápidamente filtros/página no pisa resultados nuevos.
+T-110,pages/Login.jsx,pages/Login.test.test.jsx,aprobado,low,P0,"Renderiza correo, contraseña y botón Iniciar sesión sin registro abierto."
+T-111,pages/Login.jsx,pages/Login.test.test.jsx,aprobado,low,P0,Falta correo o contraseña: muestra error y no llama authService.login.
+T-112,pages/Login.jsx,pages/Login.test.test.jsx,aprobado,medium,P0,Login válido recorta espacios del correo y conserva contraseña exacta.
+T-113,pages/Login.jsx,pages/Login.test.test.jsx,aprobado,medium,P0,Éxito llama onLogin una sola vez con sesión devuelta.
+T-114,pages/Login.jsx,pages/Login.test.test.jsx,aprobado,medium,P0,Error de backend muestra mensajeDeError en pantalla.
+T-115,pages/Login.jsx,pages/Login.test.test.jsx,aprobado,medium,P0,Mientras la petición está pendiente muestra Ingresando y deshabilita botón.
+T-116,pages/Login.jsx,pages/Login.test.test.jsx,aprobado,low,P0,Aviso externo de expiración se muestra antes de una nueva interacción.
+T-117,pages/Login.jsx,pages/Login.test.test.jsx,aprobado,medium,P0,"Tras error, un nuevo intento correcto reemplaza el mensaje anterior."
+T-118,pages/Metricas.jsx,pages/Metricas.test.test.jsx,aprobado,low,P2,Antes de cargar datos muestra esqueletos de KPIs y tabla.
+T-119,pages/Metricas.jsx,pages/Metricas.test.test.jsx,aprobado,medium,P2,Módulo no admin consulta tableroDelModulo incluso con ?module=ajeno.
+T-120,pages/Metricas.jsx,pages/Metricas.test.test.jsx,aprobado,medium,P2,Admin sin module consulta tableroGlobal y evita consulta redundante a alertasDeIntegracion.
+T-121,pages/Metricas.jsx,pages/Metricas.test.test.jsx,aprobado,medium,P2,Admin con ?module=otro consulta tableroDe con nombre y ventana.
+T-122,pages/Metricas.jsx,pages/Metricas.test.test.jsx,aprobado,medium,P2,Admin con ?module=su módulo usa tableroDelModulo según lógica actual.
+T-123,pages/Metricas.jsx,pages/Metricas.test.test.jsx,aprobado,medium,P2,"Cambiar 1h, 24h y 7 días actualiza windowHours y aria-pressed."
+T-124,pages/Metricas.jsx,pages/Metricas.test.test.jsx,aprobado,medium,P2,Error de tablero conserva encabezado y Reintentar repite consulta.
+T-125,pages/Metricas.jsx,pages/Metricas.test.test.jsx,aprobado,medium,P2,Fallo de health/ready no impide renderizar el tablero.
+T-126,pages/Metricas.jsx,pages/Metricas.test.test.jsx,aprobado,low,P2,Broker up y down se muestran como conectado/caído cuando hay datos de salud.
+T-127,pages/Metricas.jsx,pages/Metricas.test.test.jsx,pendiente,medium,P2,"Vista módulo muestra KPIs de publicados, recibidos, tasa de errores, DLQ y procesamiento."
+T-128,pages/Metricas.jsx,pages/Metricas.test.test.jsx,aprobado,medium,P2,"Vista global muestra KPIs globales, entregas por estado y tabla de módulos."
+T-129,pages/Metricas.jsx,pages/Metricas.test.test.jsx,aprobado,low,P2,Volumen por hora vacío muestra Sin eventos; con puntos muestra pico y etiquetas.
+T-130,pages/Metricas.jsx,pages/Metricas.test.test.jsx,aprobado,medium,P2,Barras de volumen muestran rechazos y alturas proporcionales.
+T-131,pages/Metricas.jsx,pages/Metricas.test.test.jsx,pendiente,medium,P2,"Porcentaje de errores vacío, cero y positivo muestra el valor y urgencia apropiados."
+T-132,pages/Metricas.jsx,pages/Metricas.test.test.jsx,aprobado,low,P2,Tablas y rankings vacíos muestran sus textos de respaldo.
+T-133,pages/Metricas.jsx,pages/Metricas.test.test.jsx,aprobado,medium,P2,Estado de entrega desconocido muestra código original y no rompe el ranking.
+T-134,pages/Metricas.jsx,pages/Metricas.test.test.jsx,aprobado,medium,P2,"Filas de módulos muestran activos sin publicar, inactivos y datos faltantes."
+T-135,pages/Metricas.jsx,pages/Metricas.test.test.jsx,aprobado,medium,P2,En vista de módulo admin aparece enlace para volver al hub completo.
+T-136,pages/Metricas.jsx,pages/Metricas.test.test.jsx,aprobado,hard,P2,Cambio rápido de ventana o módulo no muestra respuesta vieja como nueva.
+T-137,pages/Suscripciones.jsx,pages/Suscripciones.test.test.jsx,aprobado,low,P2,Carga inicial presenta esqueleto y luego módulos del catálogo.
+T-138,pages/Suscripciones.jsx,pages/Suscripciones.test.test.jsx,aprobado,medium,P2,Error al cargar catálogo o suscripciones ofrece Reintentar.
+T-139,pages/Suscripciones.jsx,pages/Suscripciones.test.test.jsx,aprobado,low,P2,Sin selección local el contador dice Mirando los N módulos.
+T-140,pages/Suscripciones.jsx,pages/Suscripciones.test.test.jsx,aprobado,medium,P2,Preferencias persistidas en localStorage aparecen seleccionadas al montar.
+T-141,pages/Suscripciones.jsx,pages/Suscripciones.test.test.jsx,aprobado,medium,P2,Tildar/destildar altera solo el borrador y muestra cambios sin aplicar.
+T-142,pages/Suscripciones.jsx,pages/Suscripciones.test.test.jsx,aprobado,medium,P2,"Aplicar guarda únicamente preferencias con guardarModulosVisibles, sin endpoints de alta/baja."
+T-143,pages/Suscripciones.jsx,pages/Suscripciones.test.test.jsx,aprobado,low,P2,Aplicar deshabilitado cuando lo elegido coincide con lo guardado.
+T-144,pages/Suscripciones.jsx,pages/Suscripciones.test.test.jsx,aprobado,medium,P2,Guardar selección y volver a seleccionar los mismos módulos no duplica ids.
+T-145,pages/Suscripciones.jsx,pages/Suscripciones.test.test.jsx,aprobado,low,P2,Contadores de tipos y suscripciones activas son correctos por módulo.
+T-146,pages/Suscripciones.jsx,pages/Suscripciones.test.test.jsx,aprobado,medium,P2,Links a métricas por módulo aparecen solo a admin.
+T-147,pages/Suscripciones.jsx,pages/Suscripciones.test.test.jsx,aprobado,low,P2,"Al guardar, mensaje de éxito enlaza a Eventos Suscriptos."
+T-148,services/api.js,services/api.test.js,aprobado,medium,P0,Cliente Axios usa baseURL y content-type esperados según configuración.
+T-149,services/api.js,services/api.test.js,aprobado,medium,P0,Interceptor agrega Bearer cuando session.getToken devuelve token.
+T-150,services/api.js,services/api.test.js,aprobado,medium,P0,Sin token no agrega Authorization.
+T-151,services/api.js,services/api.test.js,aprobado,medium,P0,Interceptor de respuesta devuelve respuestas 2xx sin cambios.
+T-152,services/api.js,services/api.test.js,aprobado,hard,P0,401 con token hace session.clear y emite core:sesion-expirada.
+T-153,services/api.js,services/api.test.js,aprobado,medium,P0,401 sin token no emite expiración ni borra la sesión otra vez.
+T-154,services/api.js,services/api.test.js,aprobado,low,P0,mensajeDeError devuelve message de la API y nombres de campos de details.
+T-155,services/api.js,services/api.test.js,aprobado,low,P0,mensajeDeError usa fallback con details vacíos o mensaje ausente.
+T-156,services/api.js,services/api.test.js,aprobado,low,P0,Network Error devuelve mensaje de conexión; otro error sin response usa fallback.
+T-157,services/auth.js,services/auth.test.js,aprobado,medium,P0,login hace POST /auth/login y entrega respuesta a session.start.
+T-158,services/auth.js,services/auth.test.js,aprobado,low,P0,me llama GET /auth/me y retorna data.
+T-159,services/auth.js,services/auth.test.js,aprobado,medium,P0,cambiarPassword hace PUT /users/{id}/password con payload esperado.
+T-160,services/auth.js,services/auth.test.js,aprobado,low,P0,listarCuentas llama GET /users y retorna data.
+T-161,services/auth.js,services/auth.test.js,aprobado,medium,P0,miCuenta busca email del usuario en respuesta array.
+T-162,services/auth.js,services/auth.test.js,aprobado,medium,P0,miCuenta acepta objeto paginado con items.
+T-163,services/auth.js,services/auth.test.js,aprobado,low,P0,miCuenta devuelve null cuando /auth/me no incluye email o no existe cuenta.
+T-164,services/auth.js,services/auth.test.js,aprobado,medium,P0,Los errores de red de métodos API se propagan para que UI los muestre.
+T-165,services/auth.js,services/auth.test.js,aprobado,low,P0,logout limpia session y no requiere backend.
+T-166,services/catalog.js,services/catalog.test.js,aprobado,low,P1,listarModulos consulta /modules y devuelve data.
+T-167,services/catalog.js,services/catalog.test.js,aprobado,low,P1,listarTiposDeEvento consulta /event-types con size=200 y usa items[].
+T-168,services/catalog.js,services/catalog.test.js,aprobado,low,P1,"Sin items, listarTiposDeEvento devuelve [] como respaldo."
+T-169,services/catalog.js,services/catalog.test.js,aprobado,medium,P1,catalogoPorModulo agrupa tipos por ownerModule e inicializa events[].
+T-170,services/catalog.js,services/catalog.test.js,aprobado,medium,P1,Módulos sin eventos no aparecen en el catálogo agrupado.
+T-171,services/catalog.js,services/catalog.test.js,aprobado,medium,P1,Tipos con ownerModule desconocido aparecen agrupados bajo Sin módulo propietario.
+T-172,services/catalog.js,services/catalog.test.js,aprobado,medium,P1,catalogoPorModulo tolera catálogo sin módulos y tipos vacíos.
+T-173,services/catalog.js,services/catalog.test.js,aprobado,low,P1,mapaDeIntegracion consulta /event-types/map.
+T-174,services/events.js,services/events.test.js,aprobado,low,P1,listarEventos envía page=1 y size=25 por defecto.
+T-175,services/events.js,services/events.test.js,pendiente,medium,P1,listarEventos transmite filtros eventType/sourceModule/status/query/since/until en params.
+T-176,services/events.js,services/events.test.js,aprobado,medium,P1,obtenerEvento construye GET /events/{eventId}.
+T-177,services/events.js,services/events.test.js,aprobado,medium,P1,obtenerJourney construye GET /events/journey/{correlationId}.
+T-178,services/events.js,services/events.test.js,aprobado,low,P1,listarDeadLetters usa status OPEN por defecto y page/size predeterminados.
+T-179,services/events.js,services/events.test.js,pendiente,low,P1,listarDeadLetters con status vacío envía undefined para traer todos.
+T-180,services/events.js,services/events.test.js,pendiente,medium,P1,obtenerDeadLetter consulta /dlq/{id}.
+T-181,services/events.js,services/events.test.js,aprobado,medium,P1,reintentar usa POST /dlq/{id}/retry y devuelve data.
+T-182,services/events.js,services/events.test.js,pendiente,low,P1,esReintentable acepta solo OPEN y reasonCode distinto de MALFORMED_MESSAGE.
+T-183,services/events.js,services/events.test.js,pendiente,low,P1,"esReintentable rechaza nulo, estados cerrados y mensajes malformados."
+T-184,services/events.js,services/events.test.js,pendiente,low,P1,"Los mapas estadoDeEvento, estadoDeDeadLetter y motivoDeDeadLetter exponen etiquetas esperadas."
+T-185,services/events.js,services/events.test.js,aprobado,medium,P1,"Todos los wrappers propagan respuestas fallidas, sin ocultar 404/409/500."
+T-186,services/metrics.js,services/metrics.test.js,aprobado,low,P1,tableroDelModulo consulta /dashboard y windowHours=24 por defecto.
+T-187,services/metrics.js,services/metrics.test.js,aprobado,low,P1,tableroGlobal consulta /dashboard/global con windowHours personalizado.
+T-188,services/metrics.js,services/metrics.test.js,aprobado,medium,P1,tableroDe construye /dashboard/modules/{modulo} con windowHours.
+T-189,services/metrics.js,services/metrics.test.js,aprobado,low,P1,alertasDeIntegracion consulta /dashboard/integration-alerts.
+T-190,services/metrics.js,services/metrics.test.js,aprobado,medium,P1,estadoDelCore consulta /health/ready fuera del prefijo /api/v1.
+T-191,services/metrics.js,services/metrics.test.js,aprobado,medium,P1,estadoDelCore funciona con base VITE_API_URL con o sin barra final.
+T-192,services/metrics.js,services/metrics.test.js,aprobado,medium,P1,Los fallos de las consultas propagan la excepción para la UI.
+T-193,services/session.js,services/session.test.js,aprobado,low,P0,start guarda sesión en sessionStorage y retorna el objeto.
+T-194,services/session.js,services/session.test.js,aprobado,low,P0,"get, getToken, getModulo y esAdmin devuelven valores correctos."
+T-195,services/session.js,services/session.test.js,aprobado,low,P0,"Sin sesión, getters retornan null/false."
+T-196,services/session.js,services/session.test.js,aprobado,medium,P0,"Al recrear módulo, get restaura el dato desde sessionStorage."
+T-197,services/session.js,services/session.test.js,aprobado,medium,P0,Contenido JSON corrupto de storage no rompe la aplicación.
+T-198,services/session.js,services/session.test.js,aprobado,medium,P0,Storage inaccesible usa fallback en memoria.
+T-199,services/session.js,services/session.test.js,aprobado,medium,P0,clear elimina sesión de memoria y de sessionStorage.
+T-200,services/session.js,services/session.test.js,aprobado,low,P0,esAdmin no toma valores falsos como administrador.
+T-201,services/session.js,services/session.test.js,aprobado,medium,P0,start seguido de otra sesión actualiza credenciales sin filtrar sesión anterior.
+T-202,services/subscriptionPreferences.js,services/subscriptionPreferences.test.js,aprobado,low,P1,"Sin preferencia, modulosVisibles devuelve [] y significa mostrar todos."
+T-203,services/subscriptionPreferences.js,services/subscriptionPreferences.test.js,aprobado,low,P1,guardarModulosVisibles persiste ids y retorna arreglo normalizado.
+T-204,services/subscriptionPreferences.js,services/subscriptionPreferences.test.js,aprobado,low,P1,"Duplicados, falsy y valores nulos se limpian."
+T-205,services/subscriptionPreferences.js,services/subscriptionPreferences.test.js,aprobado,medium,P1,Se restauran correctamente preferencias desde localStorage.
+T-206,services/subscriptionPreferences.js,services/subscriptionPreferences.test.js,aprobado,medium,P1,JSON corrupto limpia la preferencia y devuelve [] sin lanzar.
+T-207,services/subscriptionPreferences.js,services/subscriptionPreferences.test.js,aprobado,medium,P1,Valor JSON que no sea arreglo se descarta y devuelve [].
+T-208,services/subscriptionPreferences.js,services/subscriptionPreferences.test.js,aprobado,medium,P1,Storage inaccesible no impide leer/guardar el estado.
+T-209,services/subscriptions.js,services/subscriptions.test.js,aprobado,low,P0,listarSuscripciones consulta GET /subscriptions.
+T-210,services/subscriptions.js,services/subscriptions.test.js,aprobado,low,P0,suscribirse hace POST /subscriptions con maxAttempts=4 por defecto.
+T-211,services/subscriptions.js,services/subscriptions.test.js,aprobado,low,P0,suscribirse acepta maxAttempts personalizado.
+T-212,services/subscriptions.js,services/subscriptions.test.js,aprobado,low,P0,cancelarSuscripcion elimina usando DELETE /subscriptions/{id}.
+T-213,services/subscriptions.js,services/subscriptions.test.js,aprobado,medium,P0,pausarSuscripcion usa POST /{id}/toggle y active como query param.
+T-214,services/subscriptions.js,services/subscriptions.test.js,aprobado,medium,P0,"sincronizar sin diferencias no crea, pausa ni elimina suscripciones."
+T-215,services/subscriptions.js,services/subscriptions.test.js,aprobado,medium,P0,sincronizar agrega tipos nuevos una sola vez y cuenta altas.
+T-216,services/subscriptions.js,services/subscriptions.test.js,aprobado,medium,P0,sincronizar quita tipos desmarcados y cuenta bajas.
+T-217,services/subscriptions.js,services/subscriptions.test.js,aprobado,hard,P0,sincronizar reactiva suscripciones existentes inactivas en lugar de duplicarlas.
+T-218,services/subscriptions.js,services/subscriptions.test.js,aprobado,medium,P0,"sincronizar combina altas, reactivaciones y bajas en la misma operación."
+T-219,services/subscriptions.js,services/subscriptions.test.js,aprobado,hard,P0,"Si alguna operación de Promise.all falla, sincronizar propaga error sin declarar éxito falso."
+T-220,utils/filtros.js,utils/filtros.test.js,pendiente,low,P1,"SIN_FILTROS tiene eventId, desde, hasta y estado vacíos."
+T-221,utils/filtros.js,utils/filtros.test.js,pendiente,low,P1,limiteDelDia devuelve undefined para fecha ausente o inválida.
+T-222,utils/filtros.js,utils/filtros.test.js,pendiente,medium,P1,limiteDelDia convierte inicio y fin del día local a ISO correcto.
+T-223,utils/filtros.js,utils/filtros.test.js,pendiente,low,P1,validarFiltros acepta UUID completo y rechaza incompleto o malformado.
+T-224,utils/filtros.js,utils/filtros.test.js,pendiente,low,P1,validarFiltros rechaza desde posterior a hasta.
+T-225,utils/filtros.js,utils/filtros.test.js,pendiente,low,P1,validarFiltros permite rango válido y eventId vacío.
+T-226,utils/filtros.js,utils/filtros.test.js,pendiente,low,P1,hayFiltros solo retorna true cuando hay algún filtro no vacío.
+T-227,utils/filtros.js,utils/filtros.test.js,pendiente,low,P1,"describirFiltros incluye búsqueda, eventId, estado y fechas en orden esperado."
+T-228,utils/filtros.js,utils/filtros.test.js,pendiente,low,P1,Estado desconocido en describirFiltros utiliza el código original.
+T-229,utils/metricas.js,utils/metricas.test.js,existente,low,verificar,rechazados sobre el total de la ventana
+T-230,utils/metricas.js,utils/metricas.test.js,existente,low,verificar,sin eventos no inventa un 0 %
+T-231,utils/metricas.js,utils/metricas.test.js,existente,low,verificar,sin rechazos es 0 %
+T-232,utils/metricas.js,utils/metricas.test.js,existente,low,verificar,una tasa muy chica no se redondea a cero
+T-233,utils/metricas.js,utils/metricas.test.js,pendiente,low,P1,Valores numéricos de total/rejected convertibles desde string se suman correctamente.
+T-234,utils/metricas.js,utils/metricas.test.js,pendiente,low,P1,Valores faltantes o no numéricos se interpretan como 0 sin NaN.
+T-235,utils/metricas.js,utils/metricas.test.js,pendiente,medium,P1,Datos con muchos intervalos mantienen total y porcentaje correcto.
+T-236,utils/metricas.js,utils/metricas.test.js,pendiente,low,P1,"Límite exacto de 0,1 % muestra 0,1 % y no el texto inferior a 0,1."
+T-237,utils/tiempo.js,utils/tiempo.test.js,aprobado,low,P1,"esFecha devuelve true para ISO válido y false para null, vacío o inválido."
+T-238,utils/tiempo.js,utils/tiempo.test.js,aprobado,low,P1,fechaExacta devuelve guion para fecha ausente/inválida.
+T-239,utils/tiempo.js,utils/tiempo.test.js,aprobado,medium,P1,fechaExacta representa fecha/hora usando locale es-AR.
+T-240,utils/tiempo.js,utils/tiempo.test.js,aprobado,medium,P1,"haceCuanto distingue pasado, futuro y presente con reloj inyectado."
+T-241,utils/tiempo.js,utils/tiempo.test.js,aprobado,medium,P1,"haceCuanto usa segundos, minutos, horas, días, semanas, meses y años."
+T-242,utils/tiempo.js,utils/tiempo.test.js,aprobado,low,P1,haceCuanto inválido devuelve guion.
+T-243,utils/tiempo.js,utils/tiempo.test.js,aprobado,low,P1,demora negativa o fechas inválidas devuelve null.
+T-244,utils/tiempo.js,utils/tiempo.test.js,aprobado,low,P1,demora inferior a un segundo se expresa en milisegundos.
+T-245,utils/tiempo.js,utils/tiempo.test.js,aprobado,low,P1,demora entre segundos y minuto se expresa en segundos con coma decimal.
+T-246,utils/tiempo.js,utils/tiempo.test.js,aprobado,medium,P1,demora entre minuto y hora se expresa en minutos redondeados.
+T-247,utils/tiempo.js,utils/tiempo.test.js,aprobado,low,P1,demora superior a una hora se expresa en horas.
