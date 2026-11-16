@@ -5,6 +5,7 @@ import Home from "./pages/Home";
 import EventosSuscriptos from "./pages/EventosSuscriptos";
 import Metricas from "./pages/Metricas";
 import Suscripciones from "./pages/Suscripciones";
+import Dlq from "./pages/Dlq";
 import Login from "./pages/Login";
 import UserProfile from "./components/UserProfile";
 import { session } from "./services/session";
@@ -37,6 +38,12 @@ const ICONOS = {
     <>
       <path d="M3 7h11M3 12h11M3 17h7" />
       <path d="M16 15l2 2 4-4" />
+    </>
+  ),
+  fallas: (
+    <>
+      <path d="M12 3l9 16H3z" />
+      <path d="M12 10v4M12 17h.01" />
     </>
   ),
 };
@@ -121,20 +128,26 @@ function App() {
             <IconoSvg nombre="suscripciones" />
             <span>Suscripciones</span>
           </NavLink>
+          <NavLink to="/dlq">
+            <IconoSvg nombre="fallas" />
+            <span>Cola de fallas</span>
+          </NavLink>
         </nav>
 
         <button
           className="sidebar__user"
           type="button"
           onClick={() => setProfileOpen(true)}
-          aria-label="Ver datos del usuario"
           title={sesion.actor}
         >
-          <span className="sidebar__avatar">{inicial(sesion.actor)}</span>
+          {/* Sin aria-label: el nombre accesible tiene que incluir el texto que se
+              ve (WCAG 2.5.3), asi quien usa control por voz puede nombrarlo. */}
+          <span className="sidebar__avatar" aria-hidden="true">{inicial(sesion.actor)}</span>
           <span className="sidebar__user-info">
             <span className="sidebar__user-name">{sesion.displayName}</span>
             <span className="sidebar__user-rol">{sesion.isAdmin ? "Administrador" : "Módulo"}</span>
           </span>
+          <span className="visually-hidden">, ver datos del usuario</span>
         </button>
       </aside>
 
@@ -144,6 +157,7 @@ function App() {
           <Route path="/eventos-suscriptos" element={<EventosSuscriptos />} />
           <Route path="/metrics" element={<Metricas />} />
           <Route path="/suscripciones" element={<Suscripciones />} />
+          <Route path="/dlq" element={<Dlq />} />
         </Routes>
       </main>
       {profileOpen && (

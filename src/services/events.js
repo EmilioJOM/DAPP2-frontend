@@ -8,7 +8,12 @@ import api from "./api";
  * todo. No hace falta filtrar en el cliente.
  */
 
-/** GET /events — paginado, con filtros. */
+/**
+ * GET /events — paginado, con filtros.
+ *
+ * `since` y `until` son instantes ISO con zona horaria: el Core compara contra
+ * `receivedAt`. Los filtros vacios no se mandan.
+ */
 export async function listarEventos({
   page = 1,
   size = 25,
@@ -16,9 +21,11 @@ export async function listarEventos({
   sourceModule,
   status,
   query,
+  since,
+  until,
 } = {}) {
   const { data } = await api.get("/events", {
-    params: { page, size, eventType, sourceModule, status, query },
+    params: { page, size, eventType, sourceModule, status, query, since, until },
   });
   return data;
 }
@@ -35,21 +42,49 @@ export async function obtenerJourney(correlationId) {
   return data;
 }
 
-/** GET /dlq — lo que fallo. */
+/**
+ * GET /dlq — lo que fallo. El Core ya limita a las del modulo (como origen o
+ * destino). `status` vacio trae todos los estados.
+ */
 export async function listarDeadLetters({ page = 1, size = 25, status = "OPEN" } = {}) {
-  const { data } = await api.get("/dlq", { params: { page, size, status } });
+  const { data } = await api.get("/dlq", { params: { page, size, status: status || undefined } });
+  return data;
+}
+
+/** GET /dlq/{id} — motivo, detalle del error, datos enviados e historial de reintentos. */
+export async function obtenerDeadLetter(deadLetterId) {
+  const { data } = await api.get(`/dlq/${deadLetterId}`);
   return data;
 }
 
 /**
  * POST /dlq/{id}/retry — reintentar un evento fallido.
  *
- * Es lo que hay detras del boton de reenviar del historial. **Solo el admin**
- * puede: para el resto el Core responde 403.
+ * Lo puede pedir el admin o el modulo involucrado (origen o destino). Queda
+ * auditado con la persona que lo pidio.
  */
 export async function reintentar(deadLetterId) {
   const { data } = await api.post(`/dlq/${deadLetterId}/retry`);
   return data;
+}
+
+/** Como se ve el estado de una dead letter. */
+export const estadoDeDeadLetter = {
+  OPEN: { texto: "Abierta", tono: "error" },
+  RETRIED: { texto: "Reintentada", tono: "ok" },
+  DISCARDED: { texto: "Descartada", tono: "muted" },
+};
+
+/** Que significa cada motivo, en palabras del representante. */
+export const motivoDeDeadLetter = {
+  SCHEMA_VIOLATION: "Los datos no cumplen el schema del tipo de evento.",
+  DELIVERY_FAILED: "El módulo destino agotó sus intentos de entrega.",
+  MALFORMED_MESSAGE: "El mensaje no era JSON válido. No se puede reintentar: corregilo en el módulo origen.",
+};
+
+/** Un mensaje malformado no tiene sobre valido: el Core rechaza reintentarlo (409). */
+export function esReintentable(deadLetter) {
+  return deadLetter?.status === "OPEN" && deadLetter?.reasonCode !== "MALFORMED_MESSAGE";
 }
 
 /** Como se ve cada estado en la tabla. */

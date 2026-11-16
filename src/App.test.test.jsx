@@ -1,4 +1,3 @@
-import React from 'react';
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { TextEncoder, TextDecoder } from 'util';
 import { session } from './services/session';
@@ -13,6 +12,7 @@ const App = require('./App').default;
 
 jest.mock('./App.css', () => ({}));
 jest.mock('./pages/Home', () => () => <h1>Pantalla historial</h1>);
+jest.mock('./pages/Dlq', () => () => <h1>Pantalla cola de fallas</h1>);
 jest.mock('./pages/EventosSuscriptos', () => () => <h1>Pantalla eventos</h1>);
 jest.mock('./pages/Metricas', () => () => <h1>Pantalla métricas</h1>);
 jest.mock('./pages/Suscripciones', () => () => <h1>Pantalla suscripciones</h1>);
@@ -32,7 +32,7 @@ jest.mock('./components/UserProfile', () => ({ sesion, onClose, onLogout }) => (
 
 const datos = { actor: 'ana', displayName: 'Ana Pérez', isAdmin: true };
 const montar = (ruta = '/') => render(<MemoryRouter initialEntries={[ruta]}><App /></MemoryRouter>);
-const abrirPerfil = () => fireEvent.click(screen.getByRole('button', { name: 'Ver datos del usuario' }));
+const abrirPerfil = () => fireEvent.click(screen.getByRole('button', { name: /ver datos del usuario/i }));
 const expirar = () => act(() => window.dispatchEvent(new Event('core:sesion-expirada')));
 
 beforeEach(() => {
@@ -57,7 +57,7 @@ test('T-002: onLogin muestra la sesión recibida en la misma instancia de App', 
   fireEvent.click(screen.getByRole('button', { name: 'Ingresar' }));
   expect(screen.queryByRole('region', { name: 'Login' })).not.toBeInTheDocument();
   expect(screen.getByRole('heading', { name: 'Pantalla historial' })).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: 'Ver datos del usuario' })).toHaveTextContent('Ana');
+  expect(screen.getByRole('button', { name: /ver datos del usuario/i })).toHaveTextContent('Ana');
   expect(screen.getByText('Módulo')).toBeInTheDocument();
 });
 
@@ -69,7 +69,7 @@ test.each([true, false])('T-003: sesión activa muestra usuario, navegación y r
   expect(within(sidebar).getByText(datos.displayName)).toBeInTheDocument();
   expect(within(sidebar).getByText(isAdmin ? 'Administrador' : 'Módulo')).toBeInTheDocument();
   expect(within(sidebar).getAllByRole('link').map(link => link.getAttribute('href')))
-    .toEqual(['/', '/eventos-suscriptos', '/metrics', '/suscripciones']);
+    .toEqual(['/', '/eventos-suscriptos', '/metrics', '/suscripciones', '/dlq']);
 });
 
 test.each([
@@ -103,7 +103,7 @@ test.each([[' ana ', 'A'], ['', '·'], ['   ', '·'], [undefined, '·']])(
   'T-005: actor %s produce inicial %s', (actor, inicial) => {
     session.start({ ...datos, actor });
     montar();
-    const usuario = screen.getByRole('button', { name: 'Ver datos del usuario' });
+    const usuario = screen.getByRole('button', { name: /ver datos del usuario/i });
     expect(within(usuario).getByText(inicial, { exact: true })).toBeInTheDocument();
   },
 );
