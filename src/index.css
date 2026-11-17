@@ -102,6 +102,8 @@ p { margin: 0; }
 
 a { color: var(--azul); text-decoration: none; }
 a:hover { text-decoration: underline; text-underline-offset: 3px; }
+/* Un link dentro de un texto no puede distinguirse solo por el color (WCAG 1.4.1). */
+p a:not(.boton-enlace) { text-decoration: underline; text-underline-offset: 3px; }
 
 /* Los identificadores técnicos —tipos de evento, nombres de cola, módulos— van
    en mono en todo el panel. Es lo que se copia y se pega en una consola. */
