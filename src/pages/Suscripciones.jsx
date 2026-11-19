@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import { catalogoPorModulo } from "../services/catalog";
-import { listarSuscripciones } from "../services/subscriptions";
+import { listarSuscripciones, suscripcionesPropias } from "../services/subscriptions";
 import { guardarModulosVisibles, modulosVisibles } from "../services/subscriptionPreferences";
 import { EsqueletoTarjetas } from "../components/Esqueleto";
 import { ErrorDeCarga } from "../components/Estados";
@@ -41,7 +41,11 @@ export default function Suscripciones() {
         setDatos({
           intento,
           modulos: catalogo,
-          suscriptos: new Set(subs.filter((s) => s.active).map((s) => s.eventType)),
+          suscriptos: new Set(
+            suscripcionesPropias(subs, session.getModulo())
+              .filter((s) => s.active)
+              .map((s) => s.eventType),
+          ),
         });
       })
       .catch((e) => {

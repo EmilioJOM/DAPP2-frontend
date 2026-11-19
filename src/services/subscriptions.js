@@ -15,6 +15,18 @@ export async function listarSuscripciones() {
   return data;
 }
 
+/**
+ * El administrador recibe las suscripciones de TODOS los modulos en el GET.
+ * Las acciones de esta pantalla, sin embargo, se aplican solo al modulo de la
+ * sesion. Nunca se puede tomar una suscripcion ajena como propia ni borrarla.
+ */
+export function suscripcionesPropias(suscripciones, modulo) {
+  if (!modulo || typeof modulo !== "string") {
+    throw new Error("No se pudo identificar el modulo autenticado.");
+  }
+  return suscripciones.filter((s) => s.moduleName === modulo);
+}
+
 /** POST /subscriptions */
 export async function suscribirse(eventType, { maxAttempts = 4 } = {}) {
   const { data } = await api.post("/subscriptions", { eventType, maxAttempts });
@@ -38,8 +50,8 @@ export async function pausarSuscripcion(id, activa) {
  * Lleva las suscripciones del modulo al conjunto de tipos elegido: da de alta
  * lo que falta y baja lo que sobra. Devuelve que cambio, para poder avisarlo.
  */
-export async function sincronizar(tiposElegidos) {
-  const actuales = await listarSuscripciones();
+export async function sincronizar(tiposElegidos, modulo) {
+  const actuales = suscripcionesPropias(await listarSuscripciones(), modulo);
   const porTipo = new Map(actuales.map((s) => [s.eventType, s]));
   const elegidos = new Set(tiposElegidos);
 

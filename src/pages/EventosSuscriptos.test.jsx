@@ -6,7 +6,11 @@ import { modulosVisibles } from '../services/subscriptionPreferences';
 
 jest.mock('react-router', () => ({ Link: ({ to, children, ...props }) => <a href={to} {...props}>{children}</a> }));
 jest.mock('../services/catalog', () => ({ catalogoPorModulo: jest.fn() }));
-jest.mock('../services/subscriptions', () => ({ listarSuscripciones: jest.fn(), sincronizar: jest.fn() }));
+jest.mock('../services/subscriptions', () => ({
+  listarSuscripciones: jest.fn(),
+  sincronizar: jest.fn(),
+  suscripcionesPropias: (subs, modulo) => subs.filter((s) => s.moduleName === modulo),
+}));
 jest.mock('../services/subscriptionPreferences', () => ({ modulosVisibles: jest.fn() }));
 jest.mock('../services/session', () => ({ session: { getModulo: () => 'observador' } }));
 jest.mock('../services/api', () => ({ mensajeDeError: (error, fallback) => error.message || fallback }));
@@ -18,7 +22,10 @@ const catalogo = [
   ] },
   { id: 'users', name: 'users', events: [{ name: 'userCreated' }] },
 ];
-const subs = [{ active: true, eventType: 'ticketCreated' }, { active: false, eventType: 'userCreated' }];
+const subs = [
+  { moduleName: 'observador', active: true, eventType: 'ticketCreated' },
+  { moduleName: 'observador', active: false, eventType: 'userCreated' },
+];
 const deferred = () => {
   let resolve, reject;
   const promise = new Promise((ok, fail) => { resolve = ok; reject = fail; });
@@ -134,11 +141,11 @@ test('T-080, T-083: sincroniza selección, muestra progreso y recarga estado rea
   await cargar();
   fireEvent.click(checkbox('userCreated'));
   fireEvent.click(aplicar());
-  expect(sincronizar).toHaveBeenCalledWith(['ticketCreated', 'userCreated']);
+  expect(sincronizar).toHaveBeenCalledWith(['ticketCreated', 'userCreated'], 'observador');
   expect(screen.getByRole('button', { name: 'Guardando...' })).toBeDisabled();
   expect(catalogoPorModulo).toHaveBeenCalledTimes(1);
   catalogoPorModulo.mockResolvedValue([catalogo[0]]);
-  listarSuscripciones.mockResolvedValue([{ active: true, eventType: 'ticketClosed' }]);
+  listarSuscripciones.mockResolvedValue([{ moduleName: 'observador', active: true, eventType: 'ticketClosed' }]);
   await act(async () => guardado.resolve({ agregadas: 1, quitadas: 0 }));
   await waitFor(() => expect(checkbox(/ticketClosed/)).toBeChecked());
   expect(checkbox('ticketCreated')).not.toBeChecked();
@@ -179,6 +186,6 @@ test('T-082: fallo conserva selección y permite reintentar sin recargar', async
   expect(aplicar().closest('.barra-aplicar').nextElementSibling).toBe(error);
   fireEvent.click(aplicar());
   expect(await screen.findByRole('status')).toHaveTextContent('Listo: 1 suscripción nueva.');
-  expect(sincronizar).toHaveBeenNthCalledWith(2, ['ticketCreated', 'userCreated']);
+  expect(sincronizar).toHaveBeenNthCalledWith(2, ['ticketCreated', 'userCreated'], 'observador');
   expect(screen.queryByRole('alert')).not.toBeInTheDocument();
 });

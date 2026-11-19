@@ -11,8 +11,9 @@ jest.mock('react-router', () => ({
 jest.mock('../services/catalog', () => ({ catalogoPorModulo: jest.fn() }));
 jest.mock('../services/subscriptions', () => ({
   listarSuscripciones: jest.fn(), suscribirse: jest.fn(), cancelarSuscripcion: jest.fn(),
+  suscripcionesPropias: jest.fn((subs, modulo) => subs.filter((s) => s.moduleName === modulo)),
 }));
-jest.mock('../services/session', () => ({ session: { esAdmin: jest.fn() } }));
+jest.mock('../services/session', () => ({ session: { esAdmin: jest.fn(), getModulo: jest.fn() } }));
 jest.mock('../services/api', () => ({ mensajeDeError: (error, fallback) => error.message || fallback }));
 jest.mock('../services/subscriptionPreferences', () => ({
   ...jest.requireActual('../services/subscriptionPreferences'),
@@ -39,12 +40,13 @@ beforeEach(() => {
   localStorage.clear();
   catalogoPorModulo.mockResolvedValue(catalogo);
   listarSuscripciones.mockResolvedValue([
-    { eventType: 'venta.creada', active: true },
-    { eventType: 'venta.creada', active: true },
-    { eventType: 'venta.cancelada', active: false },
-    { eventType: 'desconocido', active: true },
+    { moduleName: 'observador', eventType: 'venta.creada', active: true },
+    { moduleName: 'observador', eventType: 'venta.creada', active: true },
+    { moduleName: 'observador', eventType: 'venta.cancelada', active: false },
+    { moduleName: 'observador', eventType: 'desconocido', active: true },
   ]);
   session.esAdmin.mockReturnValue(false);
+  session.getModulo.mockReturnValue('observador');
 });
 
 test('T-137: muestra carga hasta recibir catálogo y suscripciones', async () => {

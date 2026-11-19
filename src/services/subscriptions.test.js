@@ -5,6 +5,7 @@ import {
   cancelarSuscripcion,
   pausarSuscripcion,
   sincronizar,
+  suscripcionesPropias,
 } from "./subscriptions";
 
 jest.mock("./api", () => ({
@@ -19,7 +20,7 @@ beforeEach(() => {
 });
 
 test("T-209: lista las suscripciones y devuelve los datos", async () => {
-  const datos = [{ id: 1, eventType: "creado", active: true }];
+  const datos = [{ id: 1, moduleName: "core", eventType: "creado", active: true }];
   api.get.mockResolvedValue({ data: datos });
   await expect(listarSuscripciones()).resolves.toEqual(datos);
   expect(api.get).toHaveBeenCalledTimes(1);
@@ -51,10 +52,10 @@ test.each([true, false])("T-213: envía active=%p como query param", async (acti
   expect(api.post).toHaveBeenCalledWith("/subscriptions/17/toggle", null, { params: { active } });
 });
 
-test.each([[[]], [[{ id: 1, eventType: "creado", active: true }]]])(
+test.each([[[]], [[{ id: 1, moduleName: "core", eventType: "creado", active: true }]]])(
   "T-214: no modifica suscripciones sin diferencias (%p)", async (actuales) => {
     api.get.mockResolvedValue({ data: actuales });
-    await expect(sincronizar(actuales.map((s) => s.eventType))).resolves.toEqual({ agregadas: 0, quitadas: 0 });
+    await expect(sincronizar(actuales.map((s) => s.eventType), "core")).resolves.toEqual({ agregadas: 0, quitadas: 0 });
     expect(api.get).toHaveBeenCalledWith("/subscriptions");
     expect(api.post).not.toHaveBeenCalled();
     expect(api.delete).not.toHaveBeenCalled();
@@ -63,7 +64,7 @@ test.each([[[]], [[{ id: 1, eventType: "creado", active: true }]]])(
 
 test("T-215: agrega cada tipo nuevo una sola vez", async () => {
   api.get.mockResolvedValue({ data: [] });
-  await expect(sincronizar(["creado", "creado", "borrado"])).resolves.toEqual({ agregadas: 2, quitadas: 0 });
+  await expect(sincronizar(["creado", "creado", "borrado"], "core")).resolves.toEqual({ agregadas: 2, quitadas: 0 });
   expect(api.post).toHaveBeenCalledTimes(2);
   for (const eventType of ["creado", "borrado"]) {
     expect(api.post).toHaveBeenCalledWith("/subscriptions", { eventType, maxAttempts: 4 });
@@ -73,10 +74,10 @@ test("T-215: agrega cada tipo nuevo una sola vez", async () => {
 
 test("T-216: elimina los tipos desmarcados, incluso pausados", async () => {
   api.get.mockResolvedValue({ data: [
-    { id: 1, eventType: "creado", active: true },
-    { id: 2, eventType: "borrado", active: false },
+    { id: 1, moduleName: "core", eventType: "creado", active: true },
+    { id: 2, moduleName: "core", eventType: "borrado", active: false },
   ] });
-  await expect(sincronizar([])).resolves.toEqual({ agregadas: 0, quitadas: 2 });
+  await expect(sincronizar([], "core")).resolves.toEqual({ agregadas: 0, quitadas: 2 });
   expect(api.delete).toHaveBeenCalledTimes(2);
   expect(api.delete).toHaveBeenCalledWith("/subscriptions/1");
   expect(api.delete).toHaveBeenCalledWith("/subscriptions/2");
@@ -84,8 +85,8 @@ test("T-216: elimina los tipos desmarcados, incluso pausados", async () => {
 });
 
 test("T-217: reactiva sin duplicar aunque se repita el tipo elegido", async () => {
-  api.get.mockResolvedValue({ data: [{ id: 7, eventType: "creado", active: false }] });
-  await expect(sincronizar(["creado", "creado"])).resolves.toEqual({ agregadas: 1, quitadas: 0 });
+  api.get.mockResolvedValue({ data: [{ id: 7, moduleName: "core", eventType: "creado", active: false }] });
+  await expect(sincronizar(["creado", "creado"], "core")).resolves.toEqual({ agregadas: 1, quitadas: 0 });
   expect(api.post).toHaveBeenCalledTimes(1);
   expect(api.post).toHaveBeenCalledWith("/subscriptions/7/toggle", null, { params: { active: true } });
   expect(api.delete).not.toHaveBeenCalled();
@@ -93,11 +94,11 @@ test("T-217: reactiva sin duplicar aunque se repita el tipo elegido", async () =
 
 test("T-218: combina altas, reactivaciones y bajas conservando los activos elegidos", async () => {
   api.get.mockResolvedValue({ data: [
-    { id: 1, eventType: "conservado", active: true },
-    { id: 2, eventType: "pausado", active: false },
-    { id: 3, eventType: "quitado", active: true },
+    { id: 1, moduleName: "core", eventType: "conservado", active: true },
+    { id: 2, moduleName: "core", eventType: "pausado", active: false },
+    { id: 3, moduleName: "core", eventType: "quitado", active: true },
   ] });
-  await expect(sincronizar(["conservado", "pausado", "nuevo"])).resolves.toEqual({ agregadas: 2, quitadas: 1 });
+  await expect(sincronizar(["conservado", "pausado", "nuevo"], "core")).resolves.toEqual({ agregadas: 2, quitadas: 1 });
   expect(api.post).toHaveBeenCalledTimes(2);
   expect(api.post).toHaveBeenCalledWith("/subscriptions", { eventType: "nuevo", maxAttempts: 4 });
   expect(api.post).toHaveBeenCalledWith("/subscriptions/2/toggle", null, { params: { active: true } });
@@ -108,8 +109,8 @@ test("T-218: combina altas, reactivaciones y bajas conservando los activos elegi
 test.each(["alta", "reactivacion", "baja"])("T-219: propaga el error de %s", async (operacion) => {
   const error = new Error(`Fallo de ${operacion}`);
   api.get.mockResolvedValue({ data: [
-    { id: 2, eventType: "pausado", active: false },
-    { id: 3, eventType: "quitado", active: true },
+    { id: 2, moduleName: "core", eventType: "pausado", active: false },
+    { id: 3, moduleName: "core", eventType: "quitado", active: true },
   ] });
   api.post.mockImplementation((url) => {
     if ((operacion === "alta" && url === "/subscriptions") ||
@@ -119,7 +120,44 @@ test.each(["alta", "reactivacion", "baja"])("T-219: propaga el error de %s", asy
     return Promise.resolve({ data: {} });
   });
   if (operacion === "baja") api.delete.mockRejectedValue(error);
-  await expect(sincronizar(["nuevo", "pausado"])).rejects.toBe(error);
+  await expect(sincronizar(["nuevo", "pausado"], "core")).rejects.toBe(error);
   expect(api.post).toHaveBeenCalledTimes(2);
   expect(api.delete).toHaveBeenCalledTimes(1);
+});
+
+test("regresion: un admin no cancela las suscripciones de otros modulos", async () => {
+  api.get.mockResolvedValue({ data: [
+    { id: "core-a", moduleName: "core", eventType: "eventoA", active: true },
+    { id: "obras-b", moduleName: "obras", eventType: "eventoB", active: true },
+    { id: "rentas-a", moduleName: "rentas", eventType: "eventoA", active: true },
+  ] });
+
+  await expect(sincronizar(["eventoA"], "core")).resolves.toEqual({ agregadas: 0, quitadas: 0 });
+  expect(api.delete).not.toHaveBeenCalled();
+  expect(api.post).not.toHaveBeenCalled();
+});
+
+test("regresion: el admin solo puede dar de baja sus suscripciones", async () => {
+  api.get.mockResolvedValue({ data: [
+    { id: "core-a", moduleName: "core", eventType: "eventoA", active: true },
+    { id: "obras-b", moduleName: "obras", eventType: "eventoB", active: true },
+  ] });
+
+  await expect(sincronizar([], "core")).resolves.toEqual({ agregadas: 0, quitadas: 1 });
+  expect(api.delete).toHaveBeenCalledTimes(1);
+  expect(api.delete).toHaveBeenCalledWith("/subscriptions/core-a");
+});
+
+test("sin identidad de modulo no sincroniza ni intenta modificar nada", async () => {
+  api.get.mockResolvedValue({ data: [{ id: "ajena", moduleName: "obras", eventType: "A" }] });
+  await expect(sincronizar([], null)).rejects.toThrow("modulo autenticado");
+  expect(api.delete).not.toHaveBeenCalled();
+  expect(api.post).not.toHaveBeenCalled();
+});
+
+test("suscripcionesPropias descarta los tipos de otros modulos", () => {
+  expect(suscripcionesPropias([
+    { id: "1", moduleName: "obras" },
+    { id: "2", moduleName: "core" },
+  ], "core")).toEqual([{ id: "2", moduleName: "core" }]);
 });
