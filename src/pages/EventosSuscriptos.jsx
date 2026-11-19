@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import { catalogoPorModulo } from "../services/catalog";
-import { listarSuscripciones, sincronizar } from "../services/subscriptions";
+import { listarSuscripciones, sincronizar, suscripcionesPropias } from "../services/subscriptions";
 import { modulosVisibles } from "../services/subscriptionPreferences";
 import { EsqueletoTarjetas } from "../components/Esqueleto";
 import { ErrorDeCarga, SinDatos } from "../components/Estados";
@@ -43,7 +43,8 @@ export default function EventosSuscriptos() {
         if (!vigente) return;
         // Las suscripciones vigentes son las del Core, no las que quedaron
         // tildadas en la pantalla.
-        const activas = new Set(subs.filter((s) => s.active).map((s) => s.eventType));
+        const propias = suscripcionesPropias(subs, session.getModulo());
+        const activas = new Set(propias.filter((s) => s.active).map((s) => s.eventType));
         setDatos({
           version,
           suscriptas: activas,
@@ -71,7 +72,7 @@ export default function EventosSuscriptos() {
   const aplicar = async () => {
     setGuardando(true);
     try {
-      const { agregadas, quitadas } = await sincronizar([...elegidos]);
+      const { agregadas, quitadas } = await sincronizar([...elegidos], session.getModulo());
       const partes = [];
       if (agregadas) partes.push(`${agregadas} ${agregadas === 1 ? "suscripción nueva" : "suscripciones nuevas"}`);
       if (quitadas) partes.push(`${quitadas} ${quitadas === 1 ? "dada de baja" : "dadas de baja"}`);
