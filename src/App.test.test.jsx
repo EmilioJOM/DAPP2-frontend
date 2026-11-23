@@ -166,3 +166,21 @@ test('T-010: recupera una sesión preexistente en sessionStorage al montar', () 
   expect(screen.getByRole('heading', { name: 'Pantalla métricas' })).toBeInTheDocument();
   expect(screen.getByText(datos.displayName)).toBeInTheDocument();
 });
+
+test('FE-01: después de logout y nuevo login vuelve a Historial', () => {
+  session.start(datos);
+  montar('/metrics');
+  expect(screen.getByRole('heading', { name: 'Pantalla métricas' })).toBeInTheDocument();
+  abrirPerfil();
+  fireEvent.click(screen.getByRole('button', { name: 'Cerrar sesión' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Ingresar' }));
+  expect(screen.getByRole('heading', { name: 'Pantalla historial' })).toBeInTheDocument();
+});
+
+test('FE-01: después de expiración y nuevo login vuelve a Historial', () => {
+  session.start(datos);
+  montar('/metrics');
+  expirar();
+  fireEvent.click(screen.getByRole('button', { name: 'Ingresar' }));
+  expect(screen.getByRole('heading', { name: 'Pantalla historial' })).toBeInTheDocument();
+});

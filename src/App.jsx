@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { NavLink, Route, Routes } from "react-router";
+import { NavLink, Route, Routes, useNavigate } from "react-router";
 import "./App.css";
 import Home from "./pages/Home";
 import EventosSuscriptos from "./pages/EventosSuscriptos";
@@ -66,6 +66,7 @@ function IconoSvg({ nombre }) {
 }
 
 function App() {
+  const navigate = useNavigate();
   // La sesion vive en sessionStorage, asi que refrescar la pagina no desloguea.
   const [sesion, setSesion] = useState(() => session.get());
   const [profileOpen, setProfileOpen] = useState(false);
@@ -79,16 +80,18 @@ function App() {
       setSesion(null);
       setProfileOpen(false);
       setAviso("Tu sesión expiró. Volvé a entrar.");
+      navigate("/", { replace: true });
     };
     window.addEventListener("core:sesion-expirada", alExpirar);
     return () => window.removeEventListener("core:sesion-expirada", alExpirar);
-  }, []);
+  }, [navigate]);
 
   const salir = () => {
     session.clear();
     setSesion(null);
     setProfileOpen(false);
     setAviso("");
+    navigate("/", { replace: true });
   };
 
   if (!sesion) {
