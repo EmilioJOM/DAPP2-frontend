@@ -218,7 +218,7 @@ button:disabled { opacity: .45; cursor: not-allowed; }
 .primary:hover:not(:disabled) { background: var(--azul-hondo); border-color: var(--azul-hondo); }
 
 
-input[type="text"], input[type="email"], input[type="password"], input:not([type]) {
+input[type="text"], input[type="search"], input[type="email"], input[type="password"], input:not([type]) {
   padding: 9px 14px;
   border: 1px solid var(--linea-fuerte);
   border-radius: var(--radio-pildora);
@@ -229,6 +229,7 @@ input[type="text"], input[type="email"], input[type="password"], input:not([type
 }
 input::placeholder { color: var(--tinta-3); }
 input:focus { border-color: var(--celeste); outline: none; }
+input[type="search"]:focus-visible { outline: 2px solid var(--azul); outline-offset: 2px; }
 
 input[type="checkbox"] {
   width: 15px;
