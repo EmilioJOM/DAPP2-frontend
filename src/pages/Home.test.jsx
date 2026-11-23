@@ -116,7 +116,7 @@ describe('Historial de eventos', () => {
     fireEvent.change(screen.getByLabelText(/buscar eventos/i), {
       target: { value: 'noExiste' },
     })
-    fireEvent.click(screen.getByRole('button', { name: /^buscar$/i }))
+    fireEvent.click(screen.getByRole('button', { name: /aplicar filtros/i }))
 
     // Con búsqueda: lo que falta es un resultado, no un evento.
     expect(
@@ -146,6 +146,26 @@ describe('Historial de eventos', () => {
 
     expect(await screen.findByText('ticketCreated')).toBeInTheDocument()
     expect(obtenerEvento).toHaveBeenCalledWith('3f2b6c1e-8a1d-4c55-9b0e-2a7f5d3c9e10')
+  })
+
+  test('combina UUID con texto y estado sin ignorar filtros', async () => {
+    listarEventos.mockResolvedValue({ items: [], total: 0, pages: 0 })
+    obtenerEvento.mockResolvedValue({
+      id: '9', eventId: '3f2b6c1e-8a1d-4c55-9b0e-2a7f5d3c9e10',
+      eventType: 'ticketCreated', sourceModule: 'rentas', status: 'ROUTED',
+      receivedAt: '2026-11-01T15:00:00Z',
+    })
+    pantalla()
+    await screen.findByRole('heading', { name: /todavía no hay eventos/i })
+    fireEvent.change(screen.getByLabelText(/identificador/i), {
+      target: { value: '3f2b6c1e-8a1d-4c55-9b0e-2a7f5d3c9e10' },
+    })
+    fireEvent.change(screen.getByLabelText(/buscar eventos/i), { target: { value: 'ticket' } })
+    fireEvent.change(screen.getByLabelText(/estado/i), { target: { value: 'REJECTED' } })
+    fireEvent.click(screen.getByRole('button', { name: /aplicar filtros/i }))
+    expect(await screen.findByRole('heading', { name: /ningún evento coincide/i })).toBeInTheDocument()
+    expect(obtenerEvento).toHaveBeenCalledTimes(1)
+    expect(listarEventos).toHaveBeenCalledTimes(1)
   })
 
   test('un eventId inexistente se informa como "sin coincidencias", no como error', async () => {
@@ -248,7 +268,7 @@ const evento = (extra = {}) => ({
 const respuesta = (items = [evento()], total = 51, pages = 3) => ({ items, total, pages })
 const buscar = (value) => {
   fireEvent.change(screen.getByLabelText(/buscar eventos/i), { target: { value } })
-  fireEvent.click(screen.getByRole('button', { name: /^buscar$/i }))
+  fireEvent.click(screen.getByRole('button', { name: /aplicar filtros/i }))
 }
 const diferida = () => {
   let resolve, reject
@@ -286,7 +306,7 @@ test('T-099: escribir no consulta; Buscar recorta y vuelve a página 1', async (
   await screen.findByText(/página 2 de 3/)
   fireEvent.change(screen.getByLabelText(/buscar eventos/i), { target: { value: '  rentas  ' } })
   expect(listarEventos).toHaveBeenCalledTimes(2)
-  fireEvent.click(screen.getByRole('button', { name: /^buscar$/i }))
+  fireEvent.click(screen.getByRole('button', { name: /aplicar filtros/i }))
   await screen.findByText(/página 1 de 3/)
   expect(listarEventos).toHaveBeenLastCalledWith({ page: 1, size: 25, query: 'rentas' })
   expect(screen.getByText('«rentas»')).toBeInTheDocument()

@@ -41,7 +41,21 @@ export default function Home() {
     // Un eventId es unico: se pide ese evento y no hace falta paginar.
     const pedido = filtros.eventId
       ? obtenerEvento(filtros.eventId).then(
-          (evento) => ({ items: [evento], total: 1, pages: 1 }),
+          (evento) => {
+            const texto = busqueda.toLowerCase();
+            const recibido = evento.receivedAt ? Date.parse(evento.receivedAt) : NaN;
+            const desde = filtros.desde ? Date.parse(limiteDelDia(filtros.desde)) : null;
+            const hasta = filtros.hasta ? Date.parse(limiteDelDia(filtros.hasta, true)) : null;
+            const coincide =
+              (!texto || [evento.eventType, evento.sourceModule].some((valor) =>
+                String(valor ?? "").toLowerCase().includes(texto))) &&
+              (!filtros.estado || evento.status === filtros.estado) &&
+              (desde === null || recibido >= desde) &&
+              (hasta === null || recibido <= hasta);
+            return coincide
+              ? { items: [evento], total: 1, pages: 1 }
+              : { items: [], total: 0, pages: 0 };
+          },
           (e) => {
             if (e?.response?.status === 404) return { items: [], total: 0, pages: 0 };
             throw e;
@@ -72,12 +86,6 @@ export default function Home() {
     return () => { vigente = false; };
   }, [clave, pagina, busqueda, filtros, intento]);
 
-  const buscar = (e) => {
-    e.preventDefault();
-    setPagina(1);
-    setBusqueda(filtro.trim());
-  };
-
   const aplicarFiltros = (e) => {
     e.preventDefault();
     const limpio = { ...borrador, eventId: borrador.eventId.trim() };
@@ -85,6 +93,7 @@ export default function Home() {
     setProblema(motivo);
     if (motivo) return;
     setPagina(1);
+    setBusqueda(filtro.trim());
     setFiltros(limpio);
   };
 
@@ -123,18 +132,19 @@ export default function Home() {
               : `Lo que publicó y lo que recibió ${session.getModulo()}.`}
           </p>
         </div>
-        <form className="history-search" onSubmit={buscar} role="search">
+      </header>
+
+      <form className="history-filters" onSubmit={aplicarFiltros} aria-label="Filtros del historial" role="search">
+        <label>
+          <span>Tipo o módulo</span>
           <input
+            type="search"
             value={filtro}
             onChange={(e) => setFiltro(e.target.value)}
             placeholder="Buscar por tipo o módulo..."
             aria-label="Buscar eventos"
           />
-          <button type="submit">Buscar</button>
-        </form>
-      </header>
-
-      <form className="history-filters" onSubmit={aplicarFiltros} aria-label="Filtros del historial">
+        </label>
         <label>
           <span>Identificador (eventId)</span>
           <input
