@@ -118,6 +118,29 @@ test('T-124: conserva encabezado ante error y reintenta la consulta', async () =
   expect(kpi('Publicados')).toHaveTextContent('12');
 });
 
+test('FE-05: actualizar vuelve a consultar sin perder módulo ni ventana', async () => {
+  session.esAdmin.mockReturnValue(true);
+  mockQuery = 'module=otro';
+  render(<Metricas />);
+  await loaded();
+
+  fireEvent.click(screen.getByRole('button', { name: '7 días' }));
+  await loaded();
+  expect(tableroDe).toHaveBeenLastCalledWith('otro', { windowHours: 168 });
+  const consultasPrevias = tableroDe.mock.calls.length;
+  const alertasPrevias = alertasDeIntegracion.mock.calls.length;
+  const saludPrevia = estadoDelCore.mock.calls.length;
+
+  fireEvent.click(screen.getByRole('button', { name: 'Actualizar' }));
+  await loaded();
+
+  expect(tableroDe).toHaveBeenCalledTimes(consultasPrevias + 1);
+  expect(tableroDe).toHaveBeenLastCalledWith('otro', { windowHours: 168 });
+  expect(alertasDeIntegracion).toHaveBeenCalledTimes(alertasPrevias + 1);
+  expect(estadoDelCore).toHaveBeenCalledTimes(saludPrevia + 1);
+  expect(screen.getByRole('button', { name: '7 días' })).toHaveAttribute('aria-pressed', 'true');
+});
+
 test('T-125: fallo de salud no impide mostrar métricas', async () => {
   estadoDelCore.mockRejectedValue(new Error('health/ready no disponible'));
   render(<Metricas />);

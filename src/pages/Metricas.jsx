@@ -307,6 +307,9 @@ export default function Metricas() {
               </button>
             ))}
           </div>
+          <button type="button" onClick={() => setIntento((i) => i + 1)}>
+            Actualizar
+          </button>
           {esAdmin && !global && <Link className="metrics-global-link" to="/metrics">Ver el hub completo</Link>}
         </div>
       </header>
